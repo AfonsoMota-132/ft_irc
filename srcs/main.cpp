@@ -45,7 +45,7 @@ int main() {
   pollfd server_pollfd = {server_fd, POLLIN, 0};
   poll_fds.push_back(server_pollfd);
 
-  std::vector<std::pair<int, Client>> Clients;
+  std::vector<Client> Clients;
 
   std::cout << "Server listening on port " << port << std::endl;
 
@@ -64,7 +64,7 @@ int main() {
           if (newClient.getFd() >= 0) {
             fcntl(newClient.getFd(), F_SETFL,
                   fcntl(newClient.getFd(), F_GETFL, 0) | O_NONBLOCK);
-            Clients.push_back(std::make_pair(newClient.getFd(), newClient));
+            Clients.push_back(newClient);
             struct pollfd new_pollfd;
             new_pollfd.fd = newClient.getFd();
             new_pollfd.events = POLLIN;
