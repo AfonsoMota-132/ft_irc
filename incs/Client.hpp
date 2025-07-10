@@ -11,38 +11,39 @@
 /* ************************************************************************** */
 
 #ifndef Client_HPP
-# define Client_HPP
+#define Client_HPP
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <csignal>
 #include <cstdio>
-#include <unistd.h>
-#include <iostream>
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
-#include <vector>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cstring>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <vector>
 
-class	Client {
-	private:
-		int					fd;
-		struct sockaddr_in	addr;
-		socklen_t			addrLen;
-	public:
-		Client(void);
-		~Client(void);
+class Client {
+private:
+  int fd;
+  std::string nick;
+  std::string user;
+  struct sockaddr_in addr;
+  socklen_t addrLen;
+  bool auth;
+  // bool pass;
 
-		int	acceptConnection(int server_fd);
-		int	receiveMessage(char	*buffer);
-		void	closeFd(void);
-		int		getFd(void);
+public:
+  Client(void);
+  ~Client(void);
+
+  int acceptConnection(int server_fd);
+  int receiveMessage(char *buffer);
+  void closeFd(void);
+  int getFd(void);
+  bool getAuth(void);
 };
 
 #endif

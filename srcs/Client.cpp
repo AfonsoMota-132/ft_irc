@@ -12,7 +12,7 @@
 
 #include "../incs/Client.hpp"
 
-Client::Client(void) : fd(-1), addrLen(sizeof(addr)) {
+Client::Client(void) : fd(-1), addrLen(sizeof(addr)), auth(false) {
 	std::cout << "Client's Default Constructor called" << std::endl;
 };
 Client::~Client(void) {
@@ -54,4 +54,6 @@ void	Client::closeFd(void)
 	close(fd);
 }
 
-int		Client::getFd(void) { return (this->fd); };
+int		Client::getFd(void) { return (this->fd); }
+bool	Client::getAuth(void) { return (this->auth); }
+
