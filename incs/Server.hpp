@@ -19,15 +19,16 @@
 class Server {
 private:
   int serverFd;
+  int port;
+  const std::string password;
   struct sockaddr_in serverAddr;
-  const int port;
   std::vector<pollfd> pollFds;
   std::vector<Client> Clients;
   char buffer[1024];
   int pollCount;
 
 public:
-  Server(int _port);
+  Server(int _port, std::string _password);
   ~Server(void);
   
   void serverListen(void);

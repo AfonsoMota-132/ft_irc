@@ -13,7 +13,8 @@
 #include "../incs/Server.hpp"
 
 // subs return for exceptions
-Server::Server(int _port) : port(_port) {
+Server::Server(int _port, std::string _password)
+    : port(_port), password(_password) {
   serverFd = socket(AF_INET, SOCK_STREAM, 0);
   if (serverFd < 0) {
     perror("socket");
@@ -27,6 +28,7 @@ Server::Server(int _port) : port(_port) {
   if (bind(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
     perror("bind");
     close(serverFd);
+	this->port = -1;
     return;
   }
   if (listen(serverFd, SOMAXCONN) < 0) {
@@ -84,17 +86,19 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
     std::cout << "Message from FD " << clientFd << ": " << tmp;
     send(clientFd, buffer, bytes, 0);
   } else {
-    while (tmp.find_first_of('\n') == std::string::npos) {
-      bytes += read(clientFd, buffer, sizeof(buffer) - bytes - 1);
-      tmp = buffer;
-      std::cout << "wtf" << std::endl;
+    while (tmp.find_first_of("\r\n") == std::string::npos) {
+      int tmpBytes = read(clientFd, buffer, sizeof(buffer) - bytes - 1);
+      if (tmpBytes != -1) {
+        tmp += buffer;
+        bytes += tmpBytes;
+      }
       if (bytes >= 512)
         break;
     }
     if (bytes >= 512)
       send(clientFd, "Error: Message is too big!\n", 27, 0);
     else
-      std::cout << "Message from FD " << clientFd << ": " << tmp;
+      std::cout << "Message from FD " << clientFd << ":\n" << tmp;
   }
 };
 

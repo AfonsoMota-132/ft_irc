@@ -15,6 +15,7 @@
 
 #include <csignal>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
@@ -33,7 +34,7 @@ private:
   struct sockaddr_in addr;
   socklen_t addrLen;
   bool auth;
-  // bool pass;
+  bool pass;
 
 public:
   Client(void);

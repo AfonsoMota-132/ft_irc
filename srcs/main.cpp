@@ -26,12 +26,18 @@ void signalHandler(int signum) {
 }
 // Implement size limit of 512 including \r\n, following
 // the RFC 1459 protocol
-int main(void) {
-
+int main(int ac, char **av) {
+  if (ac != 3) {
+    std::cout << "Error\nInvalid Number of Arguments!" << std::endl;
+    return (1);
+  }
   signal(SIGINT, &signalHandler);
-  data = new Server(6667);
+  data = new Server(std::atoi(av[1]), av[2]);
+  if (data->getPort() == -1) {
+	return (1);
+  }
   std::cout << "Server listening on port " << data->getPort() << std::endl;
   data->serverListen();
-
+  (void)av;
   return 0;
 }
