@@ -28,7 +28,7 @@ Server::Server(int _port, std::string _password)
   if (bind(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
     perror("bind");
     close(serverFd);
-	this->port = -1;
+    this->port = -1;
     return;
   }
   if (listen(serverFd, SOMAXCONN) < 0) {
@@ -98,8 +98,24 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
     if (bytes >= 512)
       send(clientFd, "Error: Message is too big!\n", 27, 0);
     else
-      std::cout << "Message from FD " << clientFd << ":\n" << tmp;
+	  parseMsg(tmp, i, clientFd);
+      // std::cout << "Message from FD " << clientFd << ":\n" << tmp;
   }
+};
+
+void Server::parseMsg(const std::string &other, size_t &i, int &clientFd) {
+  if (Clients[i - 1].getCapLs() == false) {
+    std::string tmp(other);
+    for (size_t i = 0; i < tmp.size(); i++) {
+      tmp[i] = std::toupper(tmp[i]);
+    }
+    std::cout << tmp << std::endl;
+  }
+  // if (other == "QUIT :Leaving\r\n")
+  // 	closeClientFd(i, clientFd);
+  (void)other;
+  (void)i;
+  (void)clientFd;
 };
 
 void Server::newClient(void) {
@@ -116,5 +132,17 @@ void Server::newClient(void) {
     pollFds.push_back(new_pollfd);
     std::cout << "New client connected: FD = " << newClient.getFd()
               << std::endl;
+    // Channel newChannel("channel", "Topic we're discussing");
+    // Channels.push_back(newChannel);
+    //   std::string f0 = ":afogonca!user@host JOIN :#channel\r\n";
+    //   std::string f1 =
+    //       ":server 332 afogonca #channel :Topic we're discussing\r\n";
+    //   std::string f2 = ":server 353 afogonca = #channel :@afogonca\r\n";
+    //   std::string f3 = ":server 366 afogonca #channel :End of /NAMES
+    //   list.\r\n";
+    // send(newClient.getFd(), f0.c_str(), f0.size(), 0);
+    // send(newClient.getFd(), f1.c_str(), f1.size(), 0);
+    // send(newClient.getFd(), f2.c_str(), f2.size(), 0);
+    // send(newClient.getFd(), f3.c_str(), f3.size(), 0);
   }
 };

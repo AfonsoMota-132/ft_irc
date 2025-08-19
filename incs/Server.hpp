@@ -13,9 +13,11 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "../incs/Client.hpp"
+#include "Client.hpp"
+#include "Channel.hpp"
 #include <utility>
 
+class Channel;
 class Server {
 private:
   int serverFd;
@@ -24,6 +26,7 @@ private:
   struct sockaddr_in serverAddr;
   std::vector<pollfd> pollFds;
   std::vector<Client> Clients;
+  std::vector<Channel> Channels;
   char buffer[1024];
   int pollCount;
 
@@ -36,7 +39,7 @@ public:
   void closeClientFd(size_t &i, int &clientFd);
   void handleClientMsg(size_t &i, int &clientFd, int &bytes);
   void newClient(void);
-  
+  void parseMsg(const std::string &other, size_t &i, int &clientFd);
 };
 
 #endif

@@ -33,8 +33,9 @@ private:
   std::string user;
   struct sockaddr_in addr;
   socklen_t addrLen;
+  bool capLs;
   bool auth;
-  bool pass;
+  // bool pass;
 
 public:
   Client(void);
@@ -44,6 +45,7 @@ public:
   int receiveMessage(char *buffer);
   void closeFd(void);
   int getFd(void);
+  bool getCapLs(void);
   bool getAuth(void);
 };
 

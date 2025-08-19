@@ -6,7 +6,7 @@
 #    By: afogonca <afogonca@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/27 09:06:24 by afogonca          #+#    #+#              #
-#    Updated: 2025/07/09 09:23:41 by afogonca         ###   ########.fr        #
+#    Updated: 2025/08/14 09:59:10 by afogonca         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,8 @@ RM = rm -f
 
 SRCS = srcs/main.cpp\
 	   srcs/Client.cpp \
-	   srcs/Server.cpp
+	   srcs/Server.cpp \
+	   srcs/Channel.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
