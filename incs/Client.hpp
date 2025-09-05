@@ -34,8 +34,14 @@ private:
   struct sockaddr_in addr;
   socklen_t addrLen;
   bool capLs;
+  bool pass;
   bool auth;
-  // bool pass;
+
+  bool authCapLs(std::vector<std::string> &tokens);
+  bool authPass(std::vector<std::string> &tokens, const std::string &password);
+  bool authNick(std::vector<std::string> &tokens, const std::vector<Client> &Clients);
+  bool authUser(std::vector<std::string> &tokens);
+  void sendWelcomeMessages();
 
 public:
   Client(void);
@@ -47,6 +53,10 @@ public:
   int getFd(void);
   bool getCapLs(void);
   bool getAuth(void);
+  std::string getNick(void) const;
+  std::string getUser(void) const;
+  int authenticate(std::vector<std::string> &tokens, const std::string &other,
+                   const std::vector<Client> &Clients);
 };
 
 #endif

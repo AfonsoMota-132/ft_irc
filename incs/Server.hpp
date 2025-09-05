@@ -37,6 +37,8 @@ public:
   void serverListen(void);
   int getPort(void) const;
   void closeClientFd(size_t &i, int &clientFd);
+  void disconnectClient(size_t i, int clientFd, const std::string &reason);
+  void kickClient(size_t i, int clientFd, const std::string &reason);
   void handleClientMsg(size_t &i, int &clientFd, int &bytes);
   void newClient(void);
   void parseMsg(const std::string &other, size_t &i, int &clientFd);

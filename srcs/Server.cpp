@@ -20,6 +20,14 @@ Server::Server(int _port, std::string _password)
     perror("socket");
     return;
   }
+
+  // Allow reuse of address to avoid "Address already in use" error
+  int opt = 1;
+  if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+    perror("setsockopt");
+    close(serverFd);
+    return;
+  }
   fcntl(serverFd, F_SETFL, fcntl(serverFd, F_GETFL, 0) | O_NONBLOCK);
   memset(&serverAddr, 0, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
@@ -45,7 +53,7 @@ Server::~Server(void) { close(serverFd); }
 
 void Server::serverListen(void) {
   while (true) {
-    pollCount = poll(pollFds.data(), pollFds.size(), -1);
+    pollCount = poll(&pollFds[0], pollFds.size(), -1);
     if (pollCount < 0) {
       perror("poll");
       break;
@@ -56,9 +64,13 @@ void Server::serverListen(void) {
           newClient();
         } else {
           int clientFd = pollFds[i].fd;
-          int bytes = read(clientFd, buffer, sizeof(buffer) - 1);
+          int bytes = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
           if (bytes <= 0) {
-            closeClientFd(i, clientFd);
+            if (bytes == 0) {
+              disconnectClient(i, clientFd, "Client disconnected");
+            } else {
+              disconnectClient(i, clientFd, "Connection error");
+            }
           } else {
             handleClientMsg(i, clientFd, bytes);
           }
@@ -73,8 +85,42 @@ int Server::getPort(void) const { return (this->port); };
 void Server::closeClientFd(size_t &i, int &clientFd) {
   std::cerr << "Client disconnected: FD = " << clientFd << std::endl;
   close(clientFd);
-  pollFds.erase(pollFds.begin() + i);
-  Clients.erase(Clients.begin() + (i - 1));
+  if (i < pollFds.size())
+    pollFds.erase(pollFds.begin() + i);
+  if (i - 1 < Clients.size())
+    Clients.erase(Clients.begin() + (i - 1));
+};
+
+void Server::disconnectClient(size_t i, int clientFd,
+                              const std::string &reason) {
+  if (i > 0 && (i - 1) < Clients.size()) {
+    Client &client = Clients[i - 1];
+
+    // Send QUIT message if client is authenticated
+    if (client.getAuth()) {
+      std::string quitMsg = ":" + client.getNick() + "!" + client.getUser() +
+                            "@host QUIT :" + reason + "\r\n";
+      send(clientFd, quitMsg.c_str(), quitMsg.size(), 0);
+    } else {
+      // Send ERROR message for unauthenticated clients
+      std::string errorMsg = "ERROR :Closing Link: " + reason + "\r\n";
+      send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
+    }
+  }
+
+  // Small delay to ensure message is sent
+  usleep(100000); // 100ms
+  closeClientFd(i, clientFd);
+}
+
+void Server::kickClient(size_t i, int clientFd, const std::string &reason) {
+  // Send ERROR message for server-initiated disconnections
+  std::string errorMsg = "ERROR :Closing Link: " + reason + "\r\n";
+  send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
+
+  // Small delay to ensure message is sent
+  usleep(100000); // 100ms
+  closeClientFd(i, clientFd);
 };
 
 void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
@@ -87,8 +133,9 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
     send(clientFd, buffer, bytes, 0);
   } else {
     while (tmp.find_first_of("\r\n") == std::string::npos) {
-      int tmpBytes = read(clientFd, buffer, sizeof(buffer) - bytes - 1);
-      if (tmpBytes != -1) {
+      int tmpBytes = recv(clientFd, buffer, sizeof(buffer) - bytes - 1, 0);
+      if (tmpBytes > 0) {
+        buffer[tmpBytes] = '\0';
         tmp += buffer;
         bytes += tmpBytes;
       }
@@ -97,23 +144,68 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
     }
     if (bytes >= 512)
       send(clientFd, "Error: Message is too big!\n", 27, 0);
-    else
-	  parseMsg(tmp, i, clientFd);
-      // std::cout << "Message from FD " << clientFd << ":\n" << tmp;
+    else {
+      size_t start = 0;
+      size_t end = tmp.find("\r\n");
+
+      while (end != std::string::npos) {
+        std::string message = tmp.substr(start, end - start);
+        if (!message.empty()) {
+          parseMsg(message, i, clientFd);
+        }
+        start = end + 2;
+        end = tmp.find("\r\n", start);
+      }
+    }
+    std::cout << "Message from FD " << clientFd << ":\n" << tmp;
   }
 };
 
 void Server::parseMsg(const std::string &other, size_t &i, int &clientFd) {
-  if (Clients[i - 1].getCapLs() == false) {
-    std::string tmp(other);
-    for (size_t i = 0; i < tmp.size(); i++) {
-      tmp[i] = std::toupper(tmp[i]);
+  std::vector<std::string> tokens;
+  std::string current = "";
+  bool inTrailing = false;
+
+  for (size_t j = 0; j < other.length(); ++j) {
+    char c = other[j];
+    if (!inTrailing && c == ':') {
+      if (!current.empty()) {
+        tokens.push_back(current);
+        current = "";
+      }
+      inTrailing = true;
+      continue;
+    } else if (!inTrailing && c == ' ') {
+      if (!current.empty()) {
+        tokens.push_back(current);
+        current = "";
+      }
+      while (j + 1 < other.length() && other[j + 1] == ' ') {
+        ++j;
+      }
+    } else if (c == '\r' || c == '\n') {
+      continue;
+    } else {
+      current += c;
     }
-    std::cout << tmp << std::endl;
   }
-  // if (other == "QUIT :Leaving\r\n")
-  // 	closeClientFd(i, clientFd);
-  (void)other;
+  if (!current.empty()) {
+    tokens.push_back(current);
+  }
+  for (size_t k = 0; k < tokens.size(); ++k) {
+    std::cout << "Token[" << k << "]: " << tokens[k] << std::endl;
+  }
+  Client &client = Clients[i - 1];
+  int authResult = client.authenticate(tokens, password, Clients);
+
+  // Handle authentication result
+  if (authResult == 1) {
+    // Authentication failed, disconnect client
+    kickClient(i, clientFd, "Authentication failed");
+  }
+  // authResult == 0 means continue processing (success or waiting for more auth
+  // steps)
+
   (void)i;
   (void)clientFd;
 };
