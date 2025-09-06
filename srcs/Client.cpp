@@ -204,7 +204,6 @@ int Client::authenticate(std::vector<std::string> &tokens,
     }
     return 0; // Let other commands be processed normally
   }
-
   // Step 1: CAP LS (optional but expected by modern clients)
   if (!capLs) {
     if (ft_strtoupper(tokens[0]) == "CAP") {

@@ -12,8 +12,12 @@
 
 #include "../incs/Channel.hpp"
 
-Channel::Channel(const std::string &_name, const std::string &_topic)
-    : name(_name), topic(_topic) {
+Channel::Channel(const std::string &_name, Client &client,
+                 const std::string &_password)
+    : name(_name), password(_password) {
+	sudoUsers.push_back(client);
 }
 
 Channel::~Channel(void) {};
+
+std::string Channel::getName(void) const { return (name); };

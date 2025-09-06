@@ -13,22 +13,27 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
-# ifndef CLIENT_HPP
-#  include "Client.hpp"
-# endif
-# ifndef SERVER_HPP
-#  include "Server.hpp"
-# endif
+#ifndef CLIENT_HPP
+#include "Client.hpp"
+#endif
+#ifndef SERVER_HPP
+#include "Server.hpp"
+#endif
 
 class Channel {
 public:
-  Channel(const std::string &_name, const std::string &_topic);
+  Channel(const std::string &_name, Client &client,
+          const std::string &Password);
   ~Channel();
 
-  void	join(Client &user, bool sudo);
+  void join(Client &user, bool sudo);
+  std::string getName(void) const;
+  std::string getPassword(void) const;
 private:
+  void sendJoinMessage(void);
   std::string name;
   std::string topic;
+  std::string password;
   std::vector<Client> Users;
   std::vector<Client> sudoUsers;
   bool inv;

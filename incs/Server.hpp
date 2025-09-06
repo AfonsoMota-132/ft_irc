@@ -13,8 +13,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "Client.hpp"
 #include "Channel.hpp"
+#include "Client.hpp"
 #include <utility>
 
 class Channel;
@@ -33,7 +33,7 @@ private:
 public:
   Server(int _port, std::string _password);
   ~Server(void);
-  
+
   void serverListen(void);
   int getPort(void) const;
   void closeClientFd(size_t &i, int &clientFd);
@@ -41,7 +41,9 @@ public:
   void kickClient(size_t i, int clientFd, const std::string &reason);
   void handleClientMsg(size_t &i, int &clientFd, int &bytes);
   void newClient(void);
-  void parseMsg(const std::string &other, size_t &i, int &clientFd);
+  void parseMsg(const std::string &other, size_t i, int clientFd);
+  void privMsg(const std::vector<std::string> &tokens, int clientFd, Client &client);
+  void handleChannels(const std::vector<std::string> &tokens, Client &client);
 };
 
 #endif

@@ -160,7 +160,49 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
   }
 };
 
-void Server::parseMsg(const std::string &other, size_t &i, int &clientFd) {
+void Server::privMsg(const std::vector<std::string> &tokens, int clientFd,
+                     Client &client) {
+  bool foundClient = false;
+  if (tokens.size() == 2 || tokens[2].empty()) {
+    std::string errorMsg =
+        ":irc 461 " + client.getNick() + " PRIVMSG :Not enough parameters\r\n";
+    send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
+  } else {
+    for (size_t i = 0; i < Clients.size(); i++) {
+      if (ft_strtoupper(Clients[i].getNick()) == ft_strtoupper(tokens[1])) {
+        client.sendMessage(tokens[2], Clients[i].getNick(), Clients[i].getFd());
+        foundClient = true;
+        break;
+      }
+    }
+    if (!foundClient) {
+      std::string errorMsg = ":irc 401 " + client.getNick() + " " + tokens[1] +
+                             " :No such nick/channel\r\n";
+      send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
+    }
+  }
+}
+
+void Server::handleChannels(const std::vector<std::string> &tokens,
+                            Client &client) {
+  bool channelExists = false;
+  for (size_t i = 0; i < Channels.size(); i++) {
+    if (ft_strtoupper(Channels[i].getName()) == ft_strtoupper(tokens[1])) {
+      std::cout << "Found Channel" << std::endl;
+      channelExists = true;
+    }
+  }
+  if (!channelExists) {
+	std::string password = "";
+	if (tokens.size()>= 3)
+		password = tokens[2];
+	Channel newChannel(tokens[1], client, password);
+    std::cout << "Creating new channel!" << std::endl;
+  }
+  (void)client;
+}
+
+void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
   std::vector<std::string> tokens;
   std::string current = "";
   bool inTrailing = false;
@@ -197,18 +239,14 @@ void Server::parseMsg(const std::string &other, size_t &i, int &clientFd) {
   Client &client = Clients[i - 1];
   int authResult = 0;
   if (!client.getAuth()) {
-    std::cout << "why are you here???" << std::endl;
     authResult = client.authenticate(tokens, password, Clients);
   } else {
-    if (tokens.size() >= 2 && ft_strtoupper(tokens[0]) == "PRIVMSG")
-      for (size_t i = 0; i < Clients.size(); i++) {
-        if (ft_strtoupper(Clients[i].getNick()) == ft_strtoupper(tokens[1])) {
-		  client.sendMessage(tokens[2], Clients[i].getNick(), Clients[i].getFd());
-		  break ;
-        }
-      }
+    if (tokens.size() >= 2 && ft_strtoupper(tokens[0]) == "PRIVMSG") {
+      privMsg(tokens, clientFd, client);
+    } else if (tokens.size() >= 2 && ft_strtoupper(tokens[0]) == "JOIN") {
+      handleChannels(tokens, client);
+    }
   }
-
   // Handle authentication result
   if (authResult == 1) {
     // Authentication failed, disconnect client
