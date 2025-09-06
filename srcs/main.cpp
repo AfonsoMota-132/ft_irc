@@ -15,6 +15,17 @@
 
 Server *data;
 
+const std::string	ft_strtoupper(const std::string &other)
+{
+	std::string	result = other;
+
+	for (size_t i = 0; i < result.size(); i++) {
+		result[i] = static_cast<char>(std::toupper(result[i]));
+	}
+	std::cout << result << std::endl;
+	return (result);
+}
+
 void signalHandler(int signum) {
   if (signum == SIGPIPE || signum == SIGSEGV)
     return;
@@ -31,7 +42,7 @@ int main(int ac, char **av) {
     std::cout << "Error\nInvalid Number of Arguments!" << std::endl;
     return (1);
   }
-  signal(SIGINT, &signalHandler);
+  // signal(SIGINT, &signalHandler);
   data = new Server(std::atoi(av[1]), av[2]);
   if (data->getPort() == -1) {
 	return (1);

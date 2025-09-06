@@ -50,16 +50,15 @@ int Client::receiveMessage(char *buffer) {
 
 void Client::closeFd(void) { close(fd); }
 
-int Client::getFd(void) { return (this->fd); }
-bool Client::getCapLs(void) { return (this->capLs); }
-bool Client::getAuth(void) { return (this->auth); }
-
-std::string Client::getNick(void) const { return (this->nick); }
-std::string Client::getUser(void) const { return (this->user); }
+int Client::getFd(void) const { return (this->fd); }
+bool Client::getCapLs(void) const { return (this->capLs); }
+bool Client::getAuth(void) const { return (this->auth); }
+const std::string Client::getNick(void) const { return (this->nick); }
+const std::string Client::getUser(void) const { return (this->user); }
 
 bool Client::authCapLs(std::vector<std::string> &tokens) {
-  if (tokens.size() == 3 && tokens[0] == "CAP" && tokens[1] == "LS" &&
-      tokens[2] == "302") {
+  if (tokens.size() == 3 && ft_strtoupper(tokens[0]) == "CAP" &&
+      ft_strtoupper(tokens[1]) == "LS" && tokens[2] == "302") {
     capLs = true;
     std::string msg = ":server CAP * LS :\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
@@ -74,7 +73,7 @@ bool Client::authCapLs(std::vector<std::string> &tokens) {
 
 bool Client::authPass(std::vector<std::string> &tokens,
                       const std::string &password) {
-  if (tokens.size() != 2 || tokens[0] != "PASS") {
+  if (tokens.size() != 2 || ft_strtoupper(tokens[0]) != "PASS") {
     std::string msg = "ERROR :Invalid PASS command format\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     return false;
@@ -91,8 +90,9 @@ bool Client::authPass(std::vector<std::string> &tokens,
   }
 }
 
-bool Client::authNick(std::vector<std::string> &tokens, const std::vector<Client> &Clients) {
-  if (tokens.size() < 2 || tokens[0] != "NICK") {
+bool Client::authNick(std::vector<std::string> &tokens,
+                      const std::vector<Client> &Clients) {
+  if (tokens.size() < 2 || ft_strtoupper(tokens[0]) != "NICK") {
     return true; // Not a NICK command, continue processing
   }
   if (!pass) {
@@ -113,8 +113,9 @@ bool Client::authNick(std::vector<std::string> &tokens, const std::vector<Client
     return false; // FATAL: Nickname too long
   }
   for (size_t i = 0; i < Clients.size(); i++) {
-    if (Clients[i].nick == tokens[1]) {
-      std::string msg = ":server 432 * " + nickname + " :Nickname is already in use\r\n";
+    if (ft_strtoupper(Clients[i].nick) == ft_strtoupper(tokens[1])) {
+      std::string msg =
+          ":server 432 * " + nickname + " :Nickname is already in use\r\n";
       send(fd, msg.c_str(), msg.size(), 0);
       return true;
     }
@@ -131,7 +132,7 @@ bool Client::authNick(std::vector<std::string> &tokens, const std::vector<Client
 
 bool Client::authUser(std::vector<std::string> &tokens) {
   std::cout << tokens.size() << "\t" << fd << std::endl;
-  if (tokens.size() < 5 || tokens[0] != "USER") {
+  if (tokens.size() < 5 || ft_strtoupper(tokens[0]) != "USER") {
     return true; // Not a USER command, continue processing
   }
 
@@ -195,8 +196,10 @@ int Client::authenticate(std::vector<std::string> &tokens,
 
   // If already authenticated, ignore authentication commands
   if (auth) {
-    if (tokens[0] == "CAP" || tokens[0] == "PASS" || tokens[0] == "NICK" ||
-        tokens[0] == "USER") {
+    if (ft_strtoupper(tokens[0]) == "CAP" ||
+        ft_strtoupper(tokens[0]) == "PASS" ||
+        ft_strtoupper(tokens[0]) == "NICK" ||
+        ft_strtoupper(tokens[0]) == "USER") {
       return 0; // Silently ignore
     }
     return 0; // Let other commands be processed normally
@@ -204,7 +207,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
 
   // Step 1: CAP LS (optional but expected by modern clients)
   if (!capLs) {
-    if (tokens[0] == "CAP") {
+    if (ft_strtoupper(tokens[0]) == "CAP") {
       return authCapLs(tokens) ? 0 : 1; // FATAL on any CAP error
     } else {
       std::string msg = "ERROR :You must send CAP LS first\r\n";
@@ -214,7 +217,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
   }
   // Step 2: PASS command
   if (!pass) {
-    if (tokens[0] == "PASS") {
+    if (ft_strtoupper(tokens[0]) == "PASS") {
       return authPass(tokens, password) ? 0 : 1; // FATAL on wrong password
     } else {
       std::string msg = "ERROR :Password required before " + tokens[0] + "\r\n";
@@ -223,16 +226,16 @@ int Client::authenticate(std::vector<std::string> &tokens,
     }
   }
   // Step 3: NICK and USER commands (can be in any order)
-  if (tokens[0] == "NICK") {
+  if (ft_strtoupper(tokens[0]) == "NICK") {
     return authNick(tokens, Clients) ? 0 : 1; // FATAL on any NICK error
-  } else if (tokens[0] == "USER") {
+  } else if (ft_strtoupper(tokens[0]) == "USER") {
     return authUser(tokens) ? 0 : 1; // FATAL on any USER error
-  } else if (tokens[0] == "PASS") {
+  } else if (ft_strtoupper(tokens[0]) == "PASS") {
     // Password already provided - this is a fatal error
     std::string msg = "ERROR :Password already provided\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     return 0; // FATAL: Duplicate PASS command
-  } else if (tokens[0] == "CAP") {
+  } else if (ft_strtoupper(tokens[0]) == "CAP") {
     // CAP command after authentication started - fatal error
     std::string msg =
         "ERROR :CAP commands not allowed after authentication\r\n";
@@ -245,4 +248,12 @@ int Client::authenticate(std::vector<std::string> &tokens,
     send(fd, msg.c_str(), msg.size(), 0);
     return 1; // FATAL: Unknown command during auth
   }
+}
+
+void Client::sendMessage(const std::string &msg, const std::string &user,
+                         int fd) const {
+  std::string message = ":" + nick + "!" + user + "@localhost PRIVMSG " + user +
+                        " :" + msg + "\r\n";
+  std::cout << "sent : \"" << message << "\" to fd: " << fd << std::endl;
+  send(fd, message.c_str(), message.size(), 0);
 }

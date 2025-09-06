@@ -128,10 +128,10 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
   std::string tmp = buffer;
   if (bytes >= 512)
     send(clientFd, "Error: Message is too big!\n", 27, 0);
-  else if (Clients[i - 1].getAuth() == true) {
-    std::cout << "Message from FD " << clientFd << ": " << tmp;
-    send(clientFd, buffer, bytes, 0);
-  } else {
+  // else if (Clients[i - 1].getAuth() == true) {
+  //   std::cout << "Message from FD " << clientFd << ": " << tmp;
+  //   send(clientFd, buffer, bytes, 0);
+  else {
     while (tmp.find_first_of("\r\n") == std::string::npos) {
       int tmpBytes = recv(clientFd, buffer, sizeof(buffer) - bytes - 1, 0);
       if (tmpBytes > 0) {
@@ -157,7 +157,6 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
         end = tmp.find("\r\n", start);
       }
     }
-    std::cout << "Message from FD " << clientFd << ":\n" << tmp;
   }
 };
 
@@ -196,7 +195,19 @@ void Server::parseMsg(const std::string &other, size_t &i, int &clientFd) {
     std::cout << "Token[" << k << "]: " << tokens[k] << std::endl;
   }
   Client &client = Clients[i - 1];
-  int authResult = client.authenticate(tokens, password, Clients);
+  int authResult = 0;
+  if (!client.getAuth()) {
+    std::cout << "why are you here???" << std::endl;
+    authResult = client.authenticate(tokens, password, Clients);
+  } else {
+    if (tokens.size() >= 2 && ft_strtoupper(tokens[0]) == "PRIVMSG")
+      for (size_t i = 0; i < Clients.size(); i++) {
+        if (ft_strtoupper(Clients[i].getNick()) == ft_strtoupper(tokens[1])) {
+		  client.sendMessage(tokens[2], Clients[i].getNick(), Clients[i].getFd());
+		  break ;
+        }
+      }
+  }
 
   // Handle authentication result
   if (authResult == 1) {

@@ -26,6 +26,8 @@
 #include <unistd.h>
 #include <vector>
 
+const std::string ft_strtoupper(const std::string &other);
+
 class Client {
 private:
   int fd;
@@ -39,7 +41,8 @@ private:
 
   bool authCapLs(std::vector<std::string> &tokens);
   bool authPass(std::vector<std::string> &tokens, const std::string &password);
-  bool authNick(std::vector<std::string> &tokens, const std::vector<Client> &Clients);
+  bool authNick(std::vector<std::string> &tokens,
+                const std::vector<Client> &Clients);
   bool authUser(std::vector<std::string> &tokens);
   void sendWelcomeMessages();
 
@@ -50,13 +53,15 @@ public:
   int acceptConnection(int server_fd);
   int receiveMessage(char *buffer);
   void closeFd(void);
-  int getFd(void);
-  bool getCapLs(void);
-  bool getAuth(void);
-  std::string getNick(void) const;
-  std::string getUser(void) const;
+  int getFd(void) const;
+  bool getCapLs(void) const;
+  bool getAuth(void) const;
+  const std::string getNick(void) const;
+  const std::string getUser(void) const;
   int authenticate(std::vector<std::string> &tokens, const std::string &other,
                    const std::vector<Client> &Clients);
+  void sendMessage(const std::string &msg, const std::string &user,
+                   int fd) const;
 };
 
 #endif
