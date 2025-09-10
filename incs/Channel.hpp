@@ -26,19 +26,22 @@ public:
           const std::string &Password);
   ~Channel();
 
-  void join(Client &user, bool sudo);
+  void join(Client &user, const std::string &pass, bool sudo);
   std::string getName(void) const;
   std::string getPassword(void) const;
+
 private:
-  void sendJoinMessage(void);
+  void sendJoinMessage(Client &client);
+  std::string sendTopic(Client &client);
+  std::string sendClientList(Client &client);
   std::string name;
   std::string topic;
   std::string password;
   std::vector<Client> Users;
   std::vector<Client> sudoUsers;
+  std::vector<Client> Invites;
   bool inv;
   bool top;
-  bool kick;
   bool lim;
 };
 #endif

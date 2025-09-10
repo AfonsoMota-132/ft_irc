@@ -188,16 +188,22 @@ void Server::handleChannels(const std::vector<std::string> &tokens,
   bool channelExists = false;
   for (size_t i = 0; i < Channels.size(); i++) {
     if (ft_strtoupper(Channels[i].getName()) == ft_strtoupper(tokens[1])) {
-      std::cout << "Found Channel" << std::endl;
+      if (tokens.size() >= 3) {
+        Channels[i].join(client, tokens[2], 0);
+      } else {
+        Channels[i].join(client, "", 0);
+      }
+	  std::cout << "wtf\n" << std::endl;
       channelExists = true;
     }
   }
   if (!channelExists) {
-	std::string password = "";
-	if (tokens.size()>= 3)
-		password = tokens[2];
-	Channel newChannel(tokens[1], client, password);
+    std::string password = "";
+    if (tokens.size() >= 3)
+      password = tokens[2];
+    Channel newChannel(tokens[1], client, password);
     std::cout << "Creating new channel!" << std::endl;
+	Channels.push_back(newChannel);
   }
   (void)client;
 }
