@@ -27,6 +27,7 @@ public:
   ~Channel();
 
   void join(Client &user, const std::string &pass, bool sudo);
+  void invite(Client &user, Client &invited);
   std::string getName(void) const;
   std::string getPassword(void) const;
 

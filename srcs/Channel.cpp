@@ -83,7 +83,7 @@ void Channel::join(Client &user, const std::string &pass, bool sudo) {
     std::string msg = ":ft_irc 475 " + user.getNick() + " #" + name +
                       " :Cannot join channel (+k)\r\n";
     send(user.getFd(), msg.c_str(), msg.size(), 0);
-	return ;
+    return;
   }
   if (inv) {
     bool wasInvited = false;
@@ -106,6 +106,40 @@ void Channel::join(Client &user, const std::string &pass, bool sudo) {
     sudoUsers.push_back(user);
   }
   sendJoinMessage(user);
+}
+
+void Channel::invite(Client &user, Client &invited) {
+  bool isSudo = false;
+  for (size_t i = 0; i < sudoUsers.size(); i++) {
+    if (user.getNick() == sudoUsers[i].getNick()) {
+      isSudo = true;
+      break;
+    }
+  }
+  if (!isSudo) {
+    std::string msg = ":ft_irc 482 " + user.getNick() + " #" + name +
+                      " :You're not channel operator\r\n";
+    send(user.getFd(), msg.c_str(), msg.size(), 0);
+  } else {
+    for (size_t i = 0; i < sudoUsers.size(); i++) {
+      if (invited.getNick() == sudoUsers[i].getNick()) {
+        std::string msg = ":ft_irc 443 " + user.getNick() + " " +
+                          invited.getNick() + " #" + name +
+                          " :You're not channel operator\r\n";
+        send(user.getFd(), msg.c_str(), msg.size(), 0);
+        return;
+      }
+    }
+    for (size_t i = 0; i < Users.size(); i++) {
+      if (invited.getNick() == Users[i].getNick()) {
+        std::string msg = ":ft_irc 443 " + user.getNick() + " " +
+                          invited.getNick() + " #" + name +
+                          " :You're not channel operator\r\n";
+        send(user.getFd(), msg.c_str(), msg.size(), 0);
+        return;
+      }
+    }
+  }
 }
 
 Channel::~Channel(void) {};

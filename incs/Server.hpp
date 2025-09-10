@@ -43,7 +43,8 @@ public:
   void newClient(void);
   void parseMsg(const std::string &other, size_t i, int clientFd);
   void privMsg(const std::vector<std::string> &tokens, int clientFd, Client &client);
-  void handleChannels(const std::vector<std::string> &tokens, Client &client);
+  void handleJoin(const std::vector<std::string> &tokens, Client &client);
+  void handleInvite(const std::vector <std::string> &tokens, Client &client);
 };
 
 #endif
