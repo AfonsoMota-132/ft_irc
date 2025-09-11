@@ -191,15 +191,19 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
         ":ft_irc 461 " + client.getNick() + " JOIN :Not enough parameters\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
+  } else if (tokens[1].empty() || tokens[1].at(0) != '#') {
+    std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
+                      " :No such channel\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
   }
   for (size_t i = 0; i < Channels.size(); i++) {
-    if (ft_strtoupper(Channels[i].getName()) == ft_strtoupper(tokens[1])) {
+    if (ft_strtoupper(Channels[i].getName()) == ft_strtoupper(tokens[1].substr(1))) {
       if (tokens.size() >= 3) {
         Channels[i].join(client, tokens[2], 0);
       } else {
         Channels[i].join(client, "", 0);
       }
-      std::cout << "wtf\n" << std::endl;
       channelExists = true;
     }
   }
@@ -207,7 +211,7 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
     std::string password = "";
     if (tokens.size() >= 3)
       password = tokens[2];
-    Channel newChannel(tokens[1], client, password);
+    Channel newChannel(tokens[1].substr(1), client, password);
     std::cout << "Creating new channel!" << std::endl;
     Channels.push_back(newChannel);
   }
@@ -216,33 +220,44 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
 
 void Server::handleInvite(const std::vector<std::string> &tokens,
                           Client &client) {
+
   if (tokens.size() < 3) {
     std::string msg = ":ft_irc 461 " + client.getNick() +
                       " INVITE :Not enough parameters\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
   } else {
-    size_t channelExists = 0;
-    size_t userExists = 0;
+    int channelExists = -1;
+    int userExists = -1;
+
+    if (tokens[2].empty() || tokens[2].at(0) != '#') {
+      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[2] +
+                        " :No such channel\r\n";
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
+      return;
+    }
     for (size_t i = 0; i < Clients.size(); i++) {
-      if (ft_strtoupper(tokens[1]) == Clients[i].getNick()) {
+      if (ft_strtoupper(tokens[1]) == ft_strtoupper(Clients[i].getNick())) {
         userExists = i;
         break;
       }
     }
     for (size_t i = 0; i < Channels.size(); i++) {
-      if (ft_strtoupper(tokens[1]) == Channels[i].getName()) {
+      if (ft_strtoupper(tokens[2].substr(1)) ==
+          ft_strtoupper(Channels[i].getName())) {
         channelExists = i;
         break;
       }
     }
-    if (!userExists) {
+    if (userExists == -1) {
       std::string msg = ":ft_irc 401 " + client.getNick() + " " + tokens[1] +
                         " :No such nick/channel\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
-    } else if (!channelExists) {
+      return;
+    } else if (channelExists == -1) {
       std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[2] +
                         " :No such channel\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
+      return;
     } else {
       Channels[channelExists].invite(client, Clients[userExists]);
     }
@@ -301,8 +316,8 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
     // Authentication failed, disconnect client
     kickClient(i, clientFd, "Authentication failed");
   }
-  // authResult == 0 means continue processing (success or waiting for more auth
-  // steps)
+  // authResult == 0 means continue processing (success or waiting for more
+  // auth steps)
 
   (void)i;
   (void)clientFd;

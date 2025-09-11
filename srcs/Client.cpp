@@ -60,6 +60,11 @@ bool Client::authCapLs(std::vector<std::string> &tokens) {
   if (tokens.size() == 3 && ft_strtoupper(tokens[0]) == "CAP" &&
       ft_strtoupper(tokens[1]) == "LS" && tokens[2] == "302") {
     capLs = true;
+    std::string msg = ":server CAP * LS :\r\n";
+    send(fd, msg.c_str(), msg.size(), 0);
+    return true;
+  } else {
+
     std::string msg = ":ft_irc 461 ";
     if (nick.empty()) {
       msg += "*";
@@ -68,7 +73,7 @@ bool Client::authCapLs(std::vector<std::string> &tokens) {
     }
     msg += " CAP :Not enough parameters\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
-    return true;
+    return false;
   }
 }
 
@@ -213,7 +218,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
       return authCapLs(tokens) ? 0 : 1; // FATAL on any CAP error
     } else {
       std::string msg =
-          ":ft_irc 900 " + nick + " :Must begin session with CAP LS 302";
+          ":ft_irc 900 " + nick + " :Must begin session with CAP LS 302\r\n";
       send(fd, msg.c_str(), msg.size(), 0);
       return 1; // FATAL: No CAP LS
     }
@@ -223,7 +228,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     if (ft_strtoupper(tokens[0]) == "PASS") {
       return authPass(tokens, password) ? 0 : 1; // FATAL on wrong password
     } else {
-      std::string msg = ":ft_irc 464 * :Password required";
+      std::string msg = ":ft_irc 464 * :Password required\r\n";
       send(fd, msg.c_str(), msg.size(), 0);
       return 1; // FATAL: No password provided
     }
@@ -241,7 +246,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     } else {
       msg += nick;
     }
-    msg += " :Password has already been sent";
+    msg += " :Password has already been sent\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     return 0; // FATAL: Duplicate PASS command
   } else if (ft_strtoupper(tokens[0]) == "CAP") {
@@ -252,7 +257,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     } else {
       msg += nick;
     }
-    msg += " :CAP LS has already been sent";
+    msg += " :CAP LS has already been sent\r\n";
 
     send(fd, msg.c_str(), msg.size(), 0);
     return 0; // FATAL: Late CAP command
@@ -263,7 +268,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     } else {
       msg += nick;
     }
-    msg += " " + tokens[0] + " :Unknown command";
+    msg += " " + tokens[0] + " :Unknown command\r\n";
 
     send(fd, msg.c_str(), msg.size(), 0);
     return 1; // FATAL: Unknown command during auth

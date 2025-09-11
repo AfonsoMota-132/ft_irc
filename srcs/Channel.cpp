@@ -14,7 +14,7 @@
 
 Channel::Channel(const std::string &_name, Client &client,
                  const std::string &_password)
-    : name(_name), password(_password), inv(false), top(false), lim(false) {
+    : name(_name), password(_password), inv(true), top(false), lim(false) {
   sudoUsers.push_back(client);
   sendJoinMessage(client);
 };
@@ -68,11 +68,11 @@ std::string Channel::sendClientList(Client &client) {
 std::string Channel::sendTopic(Client &client) {
   std::string _topic;
   if (topic.empty()) {
-    _topic = ":ft_irc 331 " + client.getNick() + " " + name +
+    _topic = ":ft_irc 331 " + client.getNick() + " #" + name +
              " :No topic is set\r\n";
   } else {
     _topic =
-        ":ft_irc 332 " + client.getNick() + " " + name + " :" + topic + "\r\n";
+        ":ft_irc 332 " + client.getNick() + " #" + name + " :" + topic + "\r\n";
   }
   return _topic;
 };
@@ -88,6 +88,7 @@ void Channel::join(Client &user, const std::string &pass, bool sudo) {
   if (inv) {
     bool wasInvited = false;
     for (unsigned int i = 0; i < Invites.size(); i++) {
+      std::cout << user.getNick() << "\t" << Invites[i].getNick() << std::endl;
       if (user.getNick() == Invites[i].getNick()) {
         wasInvited = true;
         break;
@@ -125,7 +126,7 @@ void Channel::invite(Client &user, Client &invited) {
       if (invited.getNick() == sudoUsers[i].getNick()) {
         std::string msg = ":ft_irc 443 " + user.getNick() + " " +
                           invited.getNick() + " #" + name +
-                          " :You're not channel operator\r\n";
+                          " :Is already on Channel\r\n";
         send(user.getFd(), msg.c_str(), msg.size(), 0);
         return;
       }
@@ -134,12 +135,14 @@ void Channel::invite(Client &user, Client &invited) {
       if (invited.getNick() == Users[i].getNick()) {
         std::string msg = ":ft_irc 443 " + user.getNick() + " " +
                           invited.getNick() + " #" + name +
-                          " :You're not channel operator\r\n";
+                          " :Is already on Channel\r\n";
         send(user.getFd(), msg.c_str(), msg.size(), 0);
         return;
       }
     }
+    Invites.push_back(invited);
   }
+  (void)invited;
 }
 
 Channel::~Channel(void) {};
