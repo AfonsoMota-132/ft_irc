@@ -60,14 +60,15 @@ bool Client::authCapLs(std::vector<std::string> &tokens) {
   if (tokens.size() == 3 && ft_strtoupper(tokens[0]) == "CAP" &&
       ft_strtoupper(tokens[1]) == "LS" && tokens[2] == "302") {
     capLs = true;
-    std::string msg = ":server CAP * LS :\r\n";
+    std::string msg = ":ft_irc 461 ";
+    if (nick.empty()) {
+      msg += "*";
+    } else {
+      msg += nick;
+    }
+    msg += " CAP :Not enough parameters\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     return true;
-  } else {
-    std::cout << "Expected CAP LS command first" << std::endl;
-    std::string msg = "ERROR :CAP LS required\r\n";
-    send(fd, msg.c_str(), msg.size(), 0);
-    return false;
   }
 }
 
@@ -93,6 +94,14 @@ bool Client::authPass(std::vector<std::string> &tokens,
 bool Client::authNick(std::vector<std::string> &tokens,
                       const std::vector<Client> &Clients) {
   if (tokens.size() < 2 || ft_strtoupper(tokens[0]) != "NICK") {
+    std::string msg = ":ft_irc 461 ";
+    if (nick.empty()) {
+      msg += "*";
+    } else {
+      msg += nick;
+    }
+    msg += " NICK :Not enough parameters\r\n";
+    send(fd, msg.c_str(), msg.size(), 0);
     return true; // Not a NICK command, continue processing
   }
   if (!pass) {
@@ -131,8 +140,15 @@ bool Client::authNick(std::vector<std::string> &tokens,
 }
 
 bool Client::authUser(std::vector<std::string> &tokens) {
-  std::cout << tokens.size() << "\t" << fd << std::endl;
-  if (tokens.size() < 5 || ft_strtoupper(tokens[0]) != "USER") {
+  if (tokens.size() < 5) {
+    std::string msg = ":ft_irc 461 ";
+    if (nick.empty()) {
+      msg += "*";
+    } else {
+      msg += nick;
+    }
+    msg += " USER :Not enough parameters\r\n";
+    send(fd, msg.c_str(), msg.size(), 0);
     return true; // Not a USER command, continue processing
   }
 
@@ -140,13 +156,6 @@ bool Client::authUser(std::vector<std::string> &tokens) {
     std::string msg = ":server 464 * :Password required\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     return false; // FATAL: Password required
-  }
-
-  if (tokens[1].empty()) {
-    std::string msg =
-        "ERROR :Invalid USER command - username cannot be empty\r\n";
-    send(fd, msg.c_str(), msg.size(), 0);
-    return false; // FATAL: Empty username
   }
 
   user = tokens[1];
@@ -188,12 +197,6 @@ int Client::authenticate(std::vector<std::string> &tokens,
                          const std::string &password,
                          const std::vector<Client> &Clients) {
   // Handle empty command as fatal error
-  if (tokens.empty()) {
-    std::string msg = "ERROR :Empty command received\r\n";
-    send(fd, msg.c_str(), msg.size(), 0);
-    return 1; // FATAL: Empty command
-  }
-
   // If already authenticated, ignore authentication commands
   if (auth) {
     if (ft_strtoupper(tokens[0]) == "CAP" ||
@@ -209,7 +212,8 @@ int Client::authenticate(std::vector<std::string> &tokens,
     if (ft_strtoupper(tokens[0]) == "CAP") {
       return authCapLs(tokens) ? 0 : 1; // FATAL on any CAP error
     } else {
-      std::string msg = "ERROR :You must send CAP LS first\r\n";
+      std::string msg =
+          ":ft_irc 900 " + nick + " :Must begin session with CAP LS 302";
       send(fd, msg.c_str(), msg.size(), 0);
       return 1; // FATAL: No CAP LS
     }
@@ -219,7 +223,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     if (ft_strtoupper(tokens[0]) == "PASS") {
       return authPass(tokens, password) ? 0 : 1; // FATAL on wrong password
     } else {
-      std::string msg = "ERROR :Password required before " + tokens[0] + "\r\n";
+      std::string msg = ":ft_irc 464 * :Password required";
       send(fd, msg.c_str(), msg.size(), 0);
       return 1; // FATAL: No password provided
     }
@@ -231,19 +235,36 @@ int Client::authenticate(std::vector<std::string> &tokens,
     return authUser(tokens) ? 0 : 1; // FATAL on any USER error
   } else if (ft_strtoupper(tokens[0]) == "PASS") {
     // Password already provided - this is a fatal error
-    std::string msg = "ERROR :Password already provided\r\n";
+    std::string msg = ":ft_irc 900 ";
+    if (nick.empty()) {
+      msg += "*";
+    } else {
+      msg += nick;
+    }
+    msg += " :Password has already been sent";
     send(fd, msg.c_str(), msg.size(), 0);
     return 0; // FATAL: Duplicate PASS command
   } else if (ft_strtoupper(tokens[0]) == "CAP") {
     // CAP command after authentication started - fatal error
-    std::string msg =
-        "ERROR :CAP commands not allowed after authentication\r\n";
+    std::string msg = ":ft_irc 900 ";
+    if (nick.empty()) {
+      msg += "*";
+    } else {
+      msg += nick;
+    }
+    msg += " :CAP LS has already been sent";
+
     send(fd, msg.c_str(), msg.size(), 0);
     return 0; // FATAL: Late CAP command
   } else {
-    // Unknown command during authentication - fatal error
-    std::string msg =
-        "ERROR :Unknown command during authentication: " + tokens[0] + "\r\n";
+    std::string msg = ":ft_irc 421";
+    if (nick.empty()) {
+      msg += "*";
+    } else {
+      msg += nick;
+    }
+    msg += " " + tokens[0] + " :Unknown command";
+
     send(fd, msg.c_str(), msg.size(), 0);
     return 1; // FATAL: Unknown command during auth
   }
