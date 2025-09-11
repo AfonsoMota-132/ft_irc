@@ -19,6 +19,26 @@ Channel::Channel(const std::string &_name, Client &client,
   sendJoinMessage(client);
 };
 
+void Channel::sendCantJoin(Client &client, char mode, const std::string &code) {
+  std::cout << "Wrong Password" << std::endl;
+  std::string msg = ":ft_irc " + code + " " + client.getNick() + " #" + name +
+                    " :Cannot join channel (+" + mode + ")\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
+}
+
+void Channel::sendNotSudo(Client &client) {
+  std::string msg = ":ft_irc 482 " + client.getNick() + " #" + name +
+                    " :You're not channel operator\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
+}
+
+void Channel::sendNotInServer(Client &client) {
+  std::string msg = ":ft_irc 442 " + client.getNick() + " #" + name +
+                    " :You're not on that channel\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
+  return;
+}
+
 bool Channel::isUserSudo(const std::string &name) {
   for (size_t i = 0; i < sudoUsers.size(); i++) {
     if (ft_strtoupper(name) == ft_strtoupper(sudoUsers[i].getNick())) {
@@ -45,7 +65,6 @@ bool Channel::isUserInvited(const std::string &name) {
   }
   return isUserSudo(name);
 }
-
 
 void Channel::sendJoinMessage(Client &client) {
   std::string msg = ":" + client.getNick() + "!" + client.getUser() +
@@ -105,40 +124,32 @@ std::string Channel::sendTopic(Client &client) {
   return _topic;
 };
 
-void Channel::join(Client &user, const std::string &pass, bool sudo) {
+void Channel::join(Client &client, const std::string &pass, bool sudo) {
   if (!password.empty() && password != pass) {
     std::cout << "Wrong Password" << std::endl;
-    std::string msg = ":ft_irc 475 " + user.getNick() + " #" + name +
-                      " :Cannot join channel (+k)\r\n";
-    send(user.getFd(), msg.c_str(), msg.size(), 0);
+    sendCantJoin(client, 'k', "475");
     return;
   }
   if (inv) {
-    if (!isUserInvited(user.getNick())) {
-      std::string msg = ":ft_irc 473 " + user.getNick() + " #" + name +
-                        " :Cannot join channel (+i)\r\n";
-      send(user.getFd(), msg.c_str(), msg.size(), 0);
+    if (!isUserInvited(client.getNick())) {
+      sendCantJoin(client, 'i', "473");
       return;
     }
   }
   if (!sudo) {
-    Users.push_back(user);
+    Users.push_back(client);
   } else {
-    sudoUsers.push_back(user);
+    sudoUsers.push_back(client);
   }
-  sendJoinMessage(user);
+  sendJoinMessage(client);
 }
 
 void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
   if (!isUserInServer(client.getNick())) {
-    std::string msg = ":ft_irc 442 " + client.getNick() + " #" + name +
-                      " :You're not on that channel\r\n";
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    sendNotInServer(client);
     return;
   } else if (!isUserSudo(client.getNick())) {
-    std::string msg = ":ft_irc 482 " + client.getNick() + " #" + name +
-                      " :You're not channel operator\r\n";
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    sendNotSudo(client);
     return;
   } else {
     int userExists = -1;
@@ -190,28 +201,27 @@ void Channel::handleTopic(Client &client,
                           const std::vector<std::string> &tokens) {
   if (!isUserInServer(client.getNick())) {
 
+  } else if (top && !isUserSudo(client.getNick())) {
+    sendNotSudo(client);
+    return;
   } else {
   }
   (void)tokens;
 }
 
-void Channel::invite(Client &user, Client &invited) {
-  if (!isUserInServer(user.getNick())) {
-    std::string msg = ":ft_irc 442 " + user.getNick() + " #" + name +
-                      " :You're not on that channel\r\n";
-    send(user.getFd(), msg.c_str(), msg.size(), 0);
+void Channel::invite(Client &client, Client &invited) {
+  if (!isUserInServer(client.getNick())) {
+    sendNotInServer(client);
     return;
-  } else if (!isUserSudo(user.getNick())) {
-    std::string msg = ":ft_irc 482 " + user.getNick() + " #" + name +
-                      " :You're not channel operator\r\n";
-    send(user.getFd(), msg.c_str(), msg.size(), 0);
+  } else if (!isUserSudo(client.getNick())) {
+    sendNotSudo(client);
     return;
   } else {
     if (isUserInServer(invited.getNick())) {
-      std::string msg = ":ft_irc 443 " + user.getNick() + " " +
+      std::string msg = ":ft_irc 443 " + client.getNick() + " " +
                         invited.getNick() + " #" + name +
                         " :Is already on Channel\r\n";
-      send(user.getFd(), msg.c_str(), msg.size(), 0);
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
       return;
     } else {
       Invites.push_back(invited);

@@ -28,7 +28,7 @@ public:
 
   void join(Client &user, const std::string &pass, bool sudo);
   void kick(Client &client, const std::vector<std::string> &tokens);
-  void invite(Client &user, Client &invited);
+  void invite(Client &client, Client &invited);
   void handleTopic(Client &client, const std::vector<std::string> &tokens);
   std::string getName(void) const;
   std::string getPassword(void) const;
@@ -38,6 +38,9 @@ private:
   bool isUserSudo(const std::string &name);
   bool isUserInvited(const std::string &name);
   void sendJoinMessage(Client &client);
+  void sendNotSudo(Client &client);
+  void sendNotInServer(Client &client);
+  void sendCantJoin(Client &client, char mode, const std::string &code);
   std::string sendTopic(Client &client);
   std::string sendClientList(Client &client);
   std::string name;
