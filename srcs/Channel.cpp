@@ -180,6 +180,29 @@ void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
   }
 }
 
+void Channel::handleTopic(Client &client,
+                          const std::vector<std::string> &tokens) {
+  bool clientBelongs = false;
+  for (size_t i = 0; i < sudoUsers.size(); i++) {
+    if (client.getNick() == sudoUsers[i].getNick()) {
+      clientBelongs = true;
+      break;
+    }
+  }
+  if (!clientBelongs) {
+    for (size_t i = 0; i < sudoUsers.size(); i++) {
+      if (client.getNick() == sudoUsers[i].getNick()) {
+        clientBelongs = true;
+        break;
+      }
+    }
+  }
+  if (!clientBelongs) {
+
+  } else {
+  }
+}
+
 void Channel::invite(Client &user, Client &invited) {
   bool isSudo = false;
   for (size_t i = 0; i < sudoUsers.size(); i++) {
@@ -189,9 +212,19 @@ void Channel::invite(Client &user, Client &invited) {
     }
   }
   if (!isSudo) {
-    std::string msg = ":ft_irc 482 " + user.getNick() + " #" + name +
-                      " :You're not channel operator\r\n";
+    for (size_t i = 0; i < Users.size(); i++) {
+      if (user.getNick() == Users[i].getNick()) {
+        isSudo = true;
+        std::string msg = ":ft_irc 482 " + user.getNick() + " #" + name +
+                          " :You're not channel operator\r\n";
+        send(user.getFd(), msg.c_str(), msg.size(), 0);
+        return;
+      }
+    }
+    std::string msg = ":ft_irc 442 " + user.getNick() + " #" + name +
+                      " :You're not on that channel\r\n";
     send(user.getFd(), msg.c_str(), msg.size(), 0);
+    return;
   } else {
     for (size_t i = 0; i < sudoUsers.size(); i++) {
       if (invited.getNick() == sudoUsers[i].getNick()) {

@@ -85,7 +85,38 @@ void Server::handleKick(const std::vector<std::string> &tokens,
       send(client.getFd(), msg.c_str(), msg.size(), 0);
       return;
     } else {
-	  Channels[channelExists].kick(client, tokens);
+      Channels[channelExists].kick(client, tokens);
+    }
+  }
+}
+
+void Server::handleTopic(const std::vector<std::string> &tokens,
+                         Client &client) {
+  if (tokens.size() < 2) {
+    std::string msg =
+        ":ft_irc 461 " + client.getNick() + " JOIN :Not enough parameters\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  } else {
+    int serverExists = -1;
+    if (tokens[1].at(0) != '#') {
+      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
+                        " :No such channel\r\n";
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
+      return;
+    }
+    for (size_t i = 0; i < Channels.size(); i++) {
+      if (ft_strtoupper(tokens[1].substr(1)) == Channels[i].getName()) {
+        serverExists = i;
+      }
+    }
+    if (serverExists == -1) {
+      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
+                        " :No such channel\r\n";
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
+      return;
+    } else {
+	  Channels[serverExists].handleTopic(client, tokens);
     }
   }
 }

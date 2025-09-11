@@ -202,7 +202,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
                          const std::string &password,
                          const std::vector<Client> &Clients) {
   // Handle empty command as fatal error
-  // If already authenticated, ignore authentication commands
+  // If already athenticated, ignore authentication commands
   if (auth) {
     if (ft_strtoupper(tokens[0]) == "CAP" ||
         ft_strtoupper(tokens[0]) == "PASS" ||

@@ -46,6 +46,7 @@ public:
   void handleJoin(const std::vector<std::string> &tokens, Client &client);
   void handleKick(const std::vector<std::string> &tokens, Client &client);
   void handleInvite(const std::vector <std::string> &tokens, Client &client);
+  void handleTopic(const std::vector<std::string> &tokens, Client &client);
 };
 
 #endif

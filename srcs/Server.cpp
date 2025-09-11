@@ -223,6 +223,8 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
       handleKick(tokens, client);
     } else if (ft_strtoupper(tokens[0]) == "INVITE") {
       handleInvite(tokens, client);
+    } else if (ft_strtoupper(tokens[0]) == "TOPIC") {
+      handleTopic(tokens, client);
     }
   }
   // Handle authentication result
