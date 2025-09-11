@@ -109,6 +109,77 @@ void Channel::join(Client &user, const std::string &pass, bool sudo) {
   sendJoinMessage(user);
 }
 
+void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
+  bool isSudo = false;
+  bool kickerExists = false;
+  for (size_t i = 0; i < sudoUsers.size(); i++) {
+    if (client.getNick() == sudoUsers[i].getNick()) {
+      isSudo = true;
+      break;
+    }
+  }
+  for (size_t i = 0; i < Users.size(); i++) {
+    if (client.getNick() == Users[i].getNick()) {
+      kickerExists = true;
+      break;
+    }
+  }
+  if (!isSudo && !kickerExists) {
+    std::string msg = ":ft_irc 442 " + client.getNick() + " #" + name +
+                      " :You're not on that channel\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  } else if (!isSudo) {
+    std::string msg = ":ft_irc 482 " + client.getNick() + " #" + name +
+                      " :You're not channel operator\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  } else {
+    int userExists = -1;
+    bool kickSudo = false;
+    for (size_t i = 0; i < sudoUsers.size(); i++) {
+      if (ft_strtoupper(tokens[2]) == ft_strtoupper(sudoUsers[i].getNick())) {
+        kickSudo = true;
+        userExists = i;
+        break;
+      }
+    }
+    if (userExists == -1) {
+      for (size_t i = 0; i < Users.size(); i++) {
+        if (ft_strtoupper(tokens[2]) == ft_strtoupper(Users[i].getNick())) {
+          userExists = i;
+          break;
+        }
+      }
+    }
+    if (userExists == -1) {
+      std::string msg = ":ft_irc 441 " + client.getNick() + " " + tokens[2] +
+                        " #" + name + " :They aren't on that channel\r\n";
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
+      return;
+    } else {
+      std::string msg = ":" + client.getNick() + "!" + client.getUser() +
+                        "@localhost KICK #" + name + " " + tokens[2];
+      if (tokens.size() >= 4) {
+        msg += " :" + tokens[3] + "\r\n";
+      } else {
+        msg += "\r\n";
+      }
+      for (size_t i = 0; i < sudoUsers.size(); i++) {
+        send(sudoUsers[i].getFd(), msg.c_str(), msg.size(), 0);
+      }
+      for (size_t i = 0; i < Users.size(); i++) {
+        send(Users[i].getFd(), msg.c_str(), msg.size(), 0);
+      }
+      if (kickSudo) {
+        sudoUsers.erase(sudoUsers.begin() + userExists);
+      } else {
+        Users.erase(Users.begin() + userExists);
+      }
+    }
+  }
+}
+
 void Channel::invite(Client &user, Client &invited) {
   bool isSudo = false;
   for (size_t i = 0; i < sudoUsers.size(); i++) {

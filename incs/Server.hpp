@@ -44,6 +44,7 @@ public:
   void parseMsg(const std::string &other, size_t i, int clientFd);
   void privMsg(const std::vector<std::string> &tokens, int clientFd, Client &client);
   void handleJoin(const std::vector<std::string> &tokens, Client &client);
+  void handleKick(const std::vector<std::string> &tokens, Client &client);
   void handleInvite(const std::vector <std::string> &tokens, Client &client);
 };
 

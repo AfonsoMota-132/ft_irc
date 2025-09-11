@@ -18,7 +18,8 @@ RM = rm -f
 SRCS = srcs/main.cpp\
 	   srcs/Client.cpp \
 	   srcs/Server.cpp \
-	   srcs/Channel.cpp
+	   srcs/Channel.cpp \
+	   srcs/ServerHandle.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
