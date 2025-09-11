@@ -34,6 +34,9 @@ public:
   std::string getPassword(void) const;
 
 private:
+  bool isUserInServer(const std::string &name);
+  bool isUserSudo(const std::string &name);
+  bool isUserInvited(const std::string &name);
   void sendJoinMessage(Client &client);
   std::string sendTopic(Client &client);
   std::string sendClientList(Client &client);

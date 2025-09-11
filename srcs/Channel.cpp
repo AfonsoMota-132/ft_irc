@@ -19,6 +19,34 @@ Channel::Channel(const std::string &_name, Client &client,
   sendJoinMessage(client);
 };
 
+bool Channel::isUserSudo(const std::string &name) {
+  for (size_t i = 0; i < sudoUsers.size(); i++) {
+    if (ft_strtoupper(name) == ft_strtoupper(sudoUsers[i].getNick())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Channel::isUserInServer(const std::string &name) {
+  for (size_t i = 0; i < Users.size(); i++) {
+    if (ft_strtoupper(name) == ft_strtoupper(Users[i].getNick())) {
+      return true;
+    }
+  }
+  return isUserSudo(name);
+}
+
+bool Channel::isUserInvited(const std::string &name) {
+  for (size_t i = 0; i < Invites.size(); i++) {
+    if (ft_strtoupper(name) == ft_strtoupper(Invites[i].getNick())) {
+      return true;
+    }
+  }
+  return isUserSudo(name);
+}
+
+
 void Channel::sendJoinMessage(Client &client) {
   std::string msg = ":" + client.getNick() + "!" + client.getUser() +
                     "@host JOIN :#" + name + "\r\n";
@@ -86,15 +114,7 @@ void Channel::join(Client &user, const std::string &pass, bool sudo) {
     return;
   }
   if (inv) {
-    bool wasInvited = false;
-    for (unsigned int i = 0; i < Invites.size(); i++) {
-      std::cout << user.getNick() << "\t" << Invites[i].getNick() << std::endl;
-      if (user.getNick() == Invites[i].getNick()) {
-        wasInvited = true;
-        break;
-      }
-    }
-    if (!wasInvited) {
+    if (!isUserInvited(user.getNick())) {
       std::string msg = ":ft_irc 473 " + user.getNick() + " #" + name +
                         " :Cannot join channel (+i)\r\n";
       send(user.getFd(), msg.c_str(), msg.size(), 0);
@@ -110,26 +130,12 @@ void Channel::join(Client &user, const std::string &pass, bool sudo) {
 }
 
 void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
-  bool isSudo = false;
-  bool kickerExists = false;
-  for (size_t i = 0; i < sudoUsers.size(); i++) {
-    if (client.getNick() == sudoUsers[i].getNick()) {
-      isSudo = true;
-      break;
-    }
-  }
-  for (size_t i = 0; i < Users.size(); i++) {
-    if (client.getNick() == Users[i].getNick()) {
-      kickerExists = true;
-      break;
-    }
-  }
-  if (!isSudo && !kickerExists) {
+  if (!isUserInServer(client.getNick())) {
     std::string msg = ":ft_irc 442 " + client.getNick() + " #" + name +
                       " :You're not on that channel\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
-  } else if (!isSudo) {
+  } else if (!isUserSudo(client.getNick())) {
     std::string msg = ":ft_irc 482 " + client.getNick() + " #" + name +
                       " :You're not channel operator\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
@@ -182,71 +188,35 @@ void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
 
 void Channel::handleTopic(Client &client,
                           const std::vector<std::string> &tokens) {
-  bool clientBelongs = false;
-  for (size_t i = 0; i < sudoUsers.size(); i++) {
-    if (client.getNick() == sudoUsers[i].getNick()) {
-      clientBelongs = true;
-      break;
-    }
-  }
-  if (!clientBelongs) {
-    for (size_t i = 0; i < sudoUsers.size(); i++) {
-      if (client.getNick() == sudoUsers[i].getNick()) {
-        clientBelongs = true;
-        break;
-      }
-    }
-  }
-  if (!clientBelongs) {
+  if (!isUserInServer(client.getNick())) {
 
   } else {
   }
+  (void)tokens;
 }
 
 void Channel::invite(Client &user, Client &invited) {
-  bool isSudo = false;
-  for (size_t i = 0; i < sudoUsers.size(); i++) {
-    if (user.getNick() == sudoUsers[i].getNick()) {
-      isSudo = true;
-      break;
-    }
-  }
-  if (!isSudo) {
-    for (size_t i = 0; i < Users.size(); i++) {
-      if (user.getNick() == Users[i].getNick()) {
-        isSudo = true;
-        std::string msg = ":ft_irc 482 " + user.getNick() + " #" + name +
-                          " :You're not channel operator\r\n";
-        send(user.getFd(), msg.c_str(), msg.size(), 0);
-        return;
-      }
-    }
+  if (!isUserInServer(user.getNick())) {
     std::string msg = ":ft_irc 442 " + user.getNick() + " #" + name +
                       " :You're not on that channel\r\n";
     send(user.getFd(), msg.c_str(), msg.size(), 0);
     return;
+  } else if (!isUserSudo(user.getNick())) {
+    std::string msg = ":ft_irc 482 " + user.getNick() + " #" + name +
+                      " :You're not channel operator\r\n";
+    send(user.getFd(), msg.c_str(), msg.size(), 0);
+    return;
   } else {
-    for (size_t i = 0; i < sudoUsers.size(); i++) {
-      if (invited.getNick() == sudoUsers[i].getNick()) {
-        std::string msg = ":ft_irc 443 " + user.getNick() + " " +
-                          invited.getNick() + " #" + name +
-                          " :Is already on Channel\r\n";
-        send(user.getFd(), msg.c_str(), msg.size(), 0);
-        return;
-      }
+    if (isUserInServer(invited.getNick())) {
+      std::string msg = ":ft_irc 443 " + user.getNick() + " " +
+                        invited.getNick() + " #" + name +
+                        " :Is already on Channel\r\n";
+      send(user.getFd(), msg.c_str(), msg.size(), 0);
+      return;
+    } else {
+      Invites.push_back(invited);
     }
-    for (size_t i = 0; i < Users.size(); i++) {
-      if (invited.getNick() == Users[i].getNick()) {
-        std::string msg = ":ft_irc 443 " + user.getNick() + " " +
-                          invited.getNick() + " #" + name +
-                          " :Is already on Channel\r\n";
-        send(user.getFd(), msg.c_str(), msg.size(), 0);
-        return;
-      }
-    }
-    Invites.push_back(invited);
   }
-  (void)invited;
 }
 
 Channel::~Channel(void) {};
