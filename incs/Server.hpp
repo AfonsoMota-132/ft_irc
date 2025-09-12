@@ -55,6 +55,7 @@ public:
   int userExists(const std::string &user);
 
   void sendNoChannel(Client &client, const std::string &name);
+  void sendNoParams(Client &client, const std::string &cmd);
 };
 
 #endif

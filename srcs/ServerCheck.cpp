@@ -37,7 +37,13 @@ int Server::userExists(const std::string &user) {
 }
 
 void Server::sendNoChannel(Client &client, const std::string &name) {
-  std::string msg = ":ft_irc 403 " + client.getNick() + " " + name +
-                    " :No such channel\r\n";
+  std::string msg =
+      ":ft_irc 403 " + client.getNick() + " " + name + " :No such channel\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
+}
+
+void Server::sendNoParams(Client &client, const std::string &cmd) {
+  std::string msg = ":ft_irc 461 " + client.getNick() + " " + cmd +
+                    " :Not enough parameters\r\n";
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }

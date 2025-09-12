@@ -6,7 +6,7 @@
 /*   By: afogonca <afogonca@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 09:10:24 by afogonca          #+#    #+#             */
-/*   Updated: 2025/07/09 09:32:41 by afogonca         ###   ########.fr       */
+/*   Updated: 2025/09/12 09:51:44 by afogonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,9 +157,8 @@ void Server::privMsg(const std::vector<std::string> &tokens, int clientFd,
                      Client &client) {
   bool foundClient = false;
   if (tokens.size() <= 2 || tokens[2].empty()) {
-    std::string errorMsg =
-        ":irc 461 " + client.getNick() + " PRIVMSG :Not enough parameters\r\n";
-    send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
+	sendNoParams(client, "PRIVMSG");
+    return;
   } else {
     for (size_t i = 0; i < Clients.size(); i++) {
       if (ft_strtoupper(Clients[i].getNick()) == ft_strtoupper(tokens[1])) {
