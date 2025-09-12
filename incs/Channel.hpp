@@ -6,7 +6,7 @@
 /*   By: afogonca <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/14 09:02:39 by afogonca          #+#    #+#             */
-/*   Updated: 2025/08/14 10:01:37 by afogonca         ###   ########.fr       */
+/*   Updated: 2025/09/12 08:48:44 by afogonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,9 @@ private:
   void sendNotSudo(Client &client);
   void sendNotInServer(Client &client);
   void sendCantJoin(Client &client, char mode, const std::string &code);
-  std::string sendTopic(Client &client);
-  std::string sendClientList(Client &client);
+  void sendTopic(Client &client);
+  void sendClientList(Client &client);
+  void sendEndNameList(Client &client);
   std::string name;
   std::string topic;
   std::string password;

@@ -19,7 +19,8 @@ SRCS = srcs/main.cpp\
 	   srcs/Client.cpp \
 	   srcs/Server.cpp \
 	   srcs/Channel.cpp \
-	   srcs/ServerHandle.cpp
+	   srcs/ServerHandle.cpp \
+	   srcs/ChannelHelpers.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
