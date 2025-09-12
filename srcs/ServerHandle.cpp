@@ -6,7 +6,7 @@
 /*   By: afogonca <afogonca@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 10:09:07 by afogonca          #+#    #+#             */
-/*   Updated: 2025/09/12 09:51:27 by afogonca         ###   ########.fr       */
+/*   Updated: 2025/09/12 09:58:16 by afogonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@ void Server::handleInvite(const std::vector<std::string> &tokens,
                           Client &client) {
 
   if (tokens.size() < 3) {
-	sendNoParams(client, "INVITE");
-	return;
+    sendNoParams(client, "INVITE");
+    return;
   } else {
     int channelI = channelExists(tokens[2]);
     int userI = userExists(tokens[1]);
@@ -38,8 +38,8 @@ void Server::handleInvite(const std::vector<std::string> &tokens,
 void Server::handleKick(const std::vector<std::string> &tokens,
                         Client &client) {
   if (tokens.size() < 3) {
-	sendNoParams(client, "KICK");
-	return;
+    sendNoParams(client, "KICK");
+    return;
   } else {
     int channelI = channelExists(tokens[1]);
     if (channelI == -1) {
@@ -54,12 +54,12 @@ void Server::handleKick(const std::vector<std::string> &tokens,
 void Server::handleTopic(const std::vector<std::string> &tokens,
                          Client &client) {
   if (tokens.size() < 2) {
-	sendNoParams(client, "TOPIC");
+    sendNoParams(client, "TOPIC");
     return;
   } else {
     int serverI = channelExists(tokens[1]);
     if (serverI == -1) {
-	  sendNoChannel(client, tokens[1]);
+      sendNoChannel(client, tokens[1]);
       return;
     } else {
       Channels[serverI].handleTopic(client, tokens);
@@ -71,7 +71,7 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
                         Client &client) {
   bool channelExists = false;
   if (tokens.size() <= 1) {
-	sendNoParams(client, "JOIN");
+    sendNoParams(client, "JOIN");
     return;
   } else if (tokens[1].empty() || tokens[1].at(0) != '#') {
     sendNoChannel(client, tokens[1]);
@@ -99,7 +99,17 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
   (void)client;
 }
 
-void	Server::handleMode(const std::vector<std::string> &tokens, Client &client) {
-	(void) tokens;
-	(void) client;
+void Server::handleMode(const std::vector<std::string> &tokens,
+                        Client &client) {
+  if (tokens.size() < 2) {
+    sendNoParams(client, "MODE");
+    return;
+  } else {
+    int channelI = channelExists(tokens[1]);
+    if (channelI == -1) {
+      sendNoChannel(client, tokens[1]);
+      return;
+    } else {
+    }
+  }
 }

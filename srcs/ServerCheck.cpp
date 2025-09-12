@@ -6,7 +6,7 @@
 /*   By: afogonca <afogonca@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 09:31:03 by afogonca          #+#    #+#             */
-/*   Updated: 2025/09/12 09:42:21 by afogonca         ###   ########.fr       */
+/*   Updated: 2025/09/12 10:04:14 by afogonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ void Server::sendNoChannel(Client &client, const std::string &name) {
 }
 
 void Server::sendNoParams(Client &client, const std::string &cmd) {
-  std::string msg = ":ft_irc 461 " + client.getNick() + " " + cmd +
+  std::string msg = "ft_irc 461 " + client.getNick() + " " + cmd +
                     " :Not enough parameters\r\n";
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }

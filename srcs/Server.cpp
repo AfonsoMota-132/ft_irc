@@ -6,7 +6,7 @@
 /*   By: afogonca <afogonca@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 09:10:24 by afogonca          #+#    #+#             */
-/*   Updated: 2025/09/12 09:51:44 by afogonca         ###   ########.fr       */
+/*   Updated: 2025/09/12 09:52:32 by afogonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,9 +235,6 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
   }
   // authResult == 0 means continue processing (success or waiting for more
   // auth steps)
-
-  (void)i;
-  (void)clientFd;
 };
 
 void Server::newClient(void) {
@@ -252,7 +249,5 @@ void Server::newClient(void) {
     new_pollfd.events = POLLIN;
     new_pollfd.revents = 0;
     pollFds.push_back(new_pollfd);
-    std::cout << "New client connected: FD = " << newClient.getFd()
-              << std::endl;
   }
 };
