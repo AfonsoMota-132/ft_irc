@@ -6,7 +6,7 @@
 /*   By: afogonca <afogonca@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 10:09:07 by afogonca          #+#    #+#             */
-/*   Updated: 2025/09/11 10:16:36 by afogonca         ###   ########.fr       */
+/*   Updated: 2025/09/12 09:47:37 by afogonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,40 +20,18 @@ void Server::handleInvite(const std::vector<std::string> &tokens,
                       " INVITE :Not enough parameters\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
   } else {
-    int channelExists = -1;
-    int userExists = -1;
-
-    if (tokens[2].empty() || tokens[2].at(0) != '#') {
-      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[2] +
-                        " :No such channel\r\n";
-      send(client.getFd(), msg.c_str(), msg.size(), 0);
-      return;
-    }
-    for (size_t i = 0; i < Clients.size(); i++) {
-      if (ft_strtoupper(tokens[1]) == ft_strtoupper(Clients[i].getNick())) {
-        userExists = i;
-        break;
-      }
-    }
-    for (size_t i = 0; i < Channels.size(); i++) {
-      if (ft_strtoupper(tokens[2].substr(1)) ==
-          ft_strtoupper(Channels[i].getName())) {
-        channelExists = i;
-        break;
-      }
-    }
-    if (userExists == -1) {
+    int channelI = channelExists(tokens[2]);
+    int userI = userExists(tokens[1]);
+    if (userI == -1) {
       std::string msg = ":ft_irc 401 " + client.getNick() + " " + tokens[1] +
                         " :No such nick/channel\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
       return;
-    } else if (channelExists == -1) {
-      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[2] +
-                        " :No such channel\r\n";
-      send(client.getFd(), msg.c_str(), msg.size(), 0);
+    } else if (channelI == -1) {
+      sendNoChannel(client, tokens[2]);
       return;
     } else {
-      Channels[channelExists].invite(client, Clients[userExists]);
+      Channels[channelI].invite(client, Clients[userI]);
     }
   }
 }
@@ -65,27 +43,13 @@ void Server::handleKick(const std::vector<std::string> &tokens,
         ":ft_irc 461 " + client.getNick() + " KICK :Not enough parameters\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
-  } else if (tokens[1].empty() || tokens[1].at(0) != '#') {
-    std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
-                      " :No such channel\r\n";
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
-    return;
   } else {
-    int channelExists = -1;
-    for (size_t i = 0; i < Channels.size(); i++) {
-      if (ft_strtoupper(tokens[1].substr(1)) ==
-          ft_strtoupper(Channels[i].getName())) {
-        channelExists = i;
-        break;
-      }
-    }
-    if (channelExists == -1) {
-      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
-                        " :No such channel\r\n";
-      send(client.getFd(), msg.c_str(), msg.size(), 0);
+    int channelI = channelExists(tokens[1]);
+    if (channelI == -1) {
+      sendNoChannel(client, tokens[1]);
       return;
     } else {
-      Channels[channelExists].kick(client, tokens);
+      Channels[channelI].kick(client, tokens);
     }
   }
 }
@@ -98,25 +62,12 @@ void Server::handleTopic(const std::vector<std::string> &tokens,
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
   } else {
-    int serverExists = -1;
-    if (tokens[1].at(0) != '#') {
-      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
-                        " :No such channel\r\n";
-      send(client.getFd(), msg.c_str(), msg.size(), 0);
-      return;
-    }
-    for (size_t i = 0; i < Channels.size(); i++) {
-      if (ft_strtoupper(tokens[1].substr(1)) == Channels[i].getName()) {
-        serverExists = i;
-      }
-    }
-    if (serverExists == -1) {
-      std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
-                        " :No such channel\r\n";
-      send(client.getFd(), msg.c_str(), msg.size(), 0);
+    int serverI = channelExists(tokens[1]);
+    if (serverI == -1) {
+	  sendNoChannel(client, tokens[1]);
       return;
     } else {
-	  Channels[serverExists].handleTopic(client, tokens);
+      Channels[serverI].handleTopic(client, tokens);
     }
   }
 }
@@ -130,9 +81,7 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
   } else if (tokens[1].empty() || tokens[1].at(0) != '#') {
-    std::string msg = ":ft_irc 403 " + client.getNick() + " " + tokens[1] +
-                      " :No such channel\r\n";
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    sendNoChannel(client, tokens[1]);
     return;
   }
   for (size_t i = 0; i < Channels.size(); i++) {
@@ -155,4 +104,9 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
     Channels.push_back(newChannel);
   }
   (void)client;
+}
+
+void	Server::handleMode(const std::vector<std::string> &tokens, Client &client) {
+	(void) tokens;
+	(void) client;
 }

@@ -240,7 +240,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     return authUser(tokens) ? 0 : 1; // FATAL on any USER error
   } else if (ft_strtoupper(tokens[0]) == "PASS") {
     // Password already provided - this is a fatal error
-    std::string msg = ":ft_irc 900 ";
+    std::string msg = ":ft_irc 901 ";
     if (nick.empty()) {
       msg += "*";
     } else {
@@ -251,7 +251,7 @@ int Client::authenticate(std::vector<std::string> &tokens,
     return 0; // FATAL: Duplicate PASS command
   } else if (ft_strtoupper(tokens[0]) == "CAP") {
     // CAP command after authentication started - fatal error
-    std::string msg = ":ft_irc 900 ";
+    std::string msg = ":ft_irc 902 ";
     if (nick.empty()) {
       msg += "*";
     } else {

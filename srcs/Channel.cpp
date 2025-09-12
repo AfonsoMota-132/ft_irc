@@ -40,8 +40,8 @@ void Channel::join(Client &client, const std::string &pass, bool sudo) {
 }
 
 void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
-  if (!isUserInServer(client.getNick())) {
-    sendNotInServer(client);
+  if (!isUserInChannel(client.getNick())) {
+    sendNotInChannel(client);
     return;
   } else if (!isUserSudo(client.getNick())) {
     sendNotSudo(client);
@@ -94,28 +94,29 @@ void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
 
 void Channel::handleTopic(Client &client,
                           const std::vector<std::string> &tokens) {
-  if (!isUserInServer(client.getNick())) {
-
+  if (!isUserInChannel(client.getNick())) {
+    sendNotInChannel(client);
   } else if (tokens.size() == 2) {
-
+    sendTopic(client);
   } else {
     if (top && !isUserSudo(client.getNick())) {
       sendNotSudo(client);
       return;
+    } else {
+      topic = tokens[2];
     }
-    (void)tokens;
   }
 }
 
 void Channel::invite(Client &client, Client &invited) {
-  if (!isUserInServer(client.getNick())) {
-    sendNotInServer(client);
+  if (!isUserInChannel(client.getNick())) {
+    sendNotInChannel(client);
     return;
   } else if (!isUserSudo(client.getNick())) {
     sendNotSudo(client);
     return;
   } else {
-    if (isUserInServer(invited.getNick())) {
+    if (isUserInChannel(invited.getNick())) {
       std::string msg = ":ft_irc 443 " + client.getNick() + " " +
                         invited.getNick() + " #" + name +
                         " :Is already on Channel\r\n";

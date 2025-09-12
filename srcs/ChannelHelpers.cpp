@@ -25,7 +25,7 @@ void Channel::sendNotSudo(Client &client) {
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
-void Channel::sendNotInServer(Client &client) {
+void Channel::sendNotInChannel(Client &client) {
   std::string msg = ":ft_irc 442 " + client.getNick() + " #" + name +
                     " :You're not on that channel\r\n";
   send(client.getFd(), msg.c_str(), msg.size(), 0);
@@ -41,7 +41,7 @@ bool Channel::isUserSudo(const std::string &name) {
   return false;
 }
 
-bool Channel::isUserInServer(const std::string &name) {
+bool Channel::isUserInChannel(const std::string &name) {
   for (size_t i = 0; i < Users.size(); i++) {
     if (ft_strtoupper(name) == ft_strtoupper(Users[i].getNick())) {
       return true;
@@ -111,6 +111,7 @@ void Channel::sendTopic(Client &client) {
     msg =
         ":ft_irc 332 " + client.getNick() + " #" + name + " :" + topic + "\r\n";
   }
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
 };
 
 std::string Channel::getName(void) const { return (name); };

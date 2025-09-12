@@ -225,6 +225,8 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
       handleInvite(tokens, client);
     } else if (ft_strtoupper(tokens[0]) == "TOPIC") {
       handleTopic(tokens, client);
+    } else if (ft_strtoupper(tokens[0]) == "MODE") {
+	  handleMode(tokens, client);
     }
   }
   // Handle authentication result

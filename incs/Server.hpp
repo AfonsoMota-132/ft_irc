@@ -43,10 +43,18 @@ public:
   void newClient(void);
   void parseMsg(const std::string &other, size_t i, int clientFd);
   void privMsg(const std::vector<std::string> &tokens, int clientFd, Client &client);
+
+  //	Command	Handlers
   void handleJoin(const std::vector<std::string> &tokens, Client &client);
   void handleKick(const std::vector<std::string> &tokens, Client &client);
   void handleInvite(const std::vector <std::string> &tokens, Client &client);
   void handleTopic(const std::vector<std::string> &tokens, Client &client);
+  void handleMode(const std::vector<std::string> &tokens, Client &client);
+
+  int channelExists(const std::string &channel);
+  int userExists(const std::string &user);
+
+  void sendNoChannel(Client &client, const std::string &name);
 };
 
 #endif

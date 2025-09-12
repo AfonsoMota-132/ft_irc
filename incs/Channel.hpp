@@ -34,12 +34,12 @@ public:
   std::string getPassword(void) const;
 
 private:
-  bool isUserInServer(const std::string &name);
+  bool isUserInChannel(const std::string &name);
   bool isUserSudo(const std::string &name);
   bool isUserInvited(const std::string &name);
   void sendJoinMessage(Client &client);
   void sendNotSudo(Client &client);
-  void sendNotInServer(Client &client);
+  void sendNotInChannel(Client &client);
   void sendCantJoin(Client &client, char mode, const std::string &code);
   void sendTopic(Client &client);
   void sendClientList(Client &client);
