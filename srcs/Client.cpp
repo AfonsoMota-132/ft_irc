@@ -121,7 +121,8 @@ bool Client::authNick(std::vector<std::string> &tokens,
   }
   // Check for invalid characters in nickname
   const std::string &nickname = tokens[1];
-  if (nickname.length() > 9) { // IRC nickname limit
+  if (nickname.length() > 9 || nickname.at(0) == '#' ||
+      nickname.at(0) == '&') { // IRC nickname limit
     std::string msg = ":server 432 * " + nickname + " :Erroneous nickname\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     return false; // FATAL: Nickname too long

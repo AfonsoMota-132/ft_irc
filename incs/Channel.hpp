@@ -29,7 +29,11 @@ public:
   void join(Client &user, const std::string &pass, bool sudo);
   void kick(Client &client, const std::vector<std::string> &tokens);
   void invite(Client &client, Client &invited);
+  void privMsg(Client &client, const std::vector<std::string> &tokens);
   void handleTopic(Client &client, const std::vector<std::string> &tokens);
+  void handleMode(Client &client, const std::vector<std::string> &tokens,
+                  const std::vector<Client> &clients);
+  void handleQuit(Client &client, const std::vector<std::string> &tokens);
   std::string getName(void) const;
   std::string getPassword(void) const;
 
@@ -44,6 +48,13 @@ private:
   void sendTopic(Client &client);
   void sendClientList(Client &client);
   void sendEndNameList(Client &client);
+
+  void handleModeK(Client &client, const std::vector<std::string> &tokens,
+                   bool add);
+  void handleModeO(Client &client, const std::vector<std::string> &tokens,
+                   bool add);
+  void handleModeL(Client &client, const std::vector<std::string> &tokens,
+                   bool add);
   std::string name;
   std::string topic;
   std::string password;
@@ -52,6 +63,6 @@ private:
   std::vector<Client> Invites;
   bool inv;
   bool top;
-  bool lim;
+  int lim;
 };
 #endif

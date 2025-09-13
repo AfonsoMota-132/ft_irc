@@ -58,6 +58,7 @@ public:
   bool getAuth(void) const;
   const std::string getNick(void) const;
   const std::string getUser(void) const;
+  void handleQuit(const std::vector<std::string> &tokens);
   int authenticate(std::vector<std::string> &tokens, const std::string &other,
                    const std::vector<Client> &Clients);
   void sendMessage(const std::string &msg, const std::string &user,

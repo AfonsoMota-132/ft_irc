@@ -114,13 +114,14 @@ void Server::handleMode(const std::vector<std::string> &tokens,
         std::string msg = ":ft_irc 904 " + client.getNick() +
                           " MODE :Too many mode changes in one call!\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
-      } else if (tokens[1].size() < 2) {
+      } else if (tokens[1].size() < 2){
         std::string msg = ":ft_irc 905 " + client.getNick() +
                           " MODE :Mode Changes need to be <sign><mode>!\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
       } else {
-		Channels[channelI].handleMode(client, tokens);
-      }
+
+			}
+	
     }
   }
 }

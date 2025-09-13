@@ -93,7 +93,7 @@ void Server::closeClientFd(size_t &i, int &clientFd) {
 
 void Server::disconnectClient(size_t i, int clientFd,
                               const std::string &reason) {
-  if (i > 0 && (i - 1) < Clients.size()) {
+  if (i > 0 && (i - 1) < Clients.size() && !reason.empty()) {
     Client &client = Clients[i - 1];
 
     // Send QUIT message if client is authenticated
@@ -122,9 +122,11 @@ void Server::kickClient(size_t i, int clientFd, const std::string &reason) {
 void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
   buffer[bytes] = '\0';
   std::string tmp = buffer;
-  if (bytes >= 512)
-    send(clientFd, "Error: Message is too big!\n", 27, 0);
-  else {
+  if (bytes >= 512) {
+    std::string msg =
+        ":ft_irc 903 " + Clients[i - 1].getNick() + " :Message too long";
+    send(clientFd, msg.c_str(), msg.size(), 0);
+  } else {
     while (tmp.find_first_of("\r\n") == std::string::npos) {
       int tmpBytes = recv(clientFd, buffer, sizeof(buffer) - bytes - 1, 0);
       if (tmpBytes > 0) {
@@ -153,25 +155,26 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
   }
 };
 
-void Server::privMsg(const std::vector<std::string> &tokens, int clientFd,
-                     Client &client) {
-  bool foundClient = false;
+void Server::privMsg(const std::vector<std::string> &tokens, Client &client) {
   if (tokens.size() <= 2 || tokens[2].empty()) {
-	sendNoParams(client, "PRIVMSG");
+    sendNoParams(client, "PRIVMSG");
     return;
+  } else if (userExists(tokens[1]) != -1) {
+    int userI = userExists(tokens[1]);
+    client.sendMessage(tokens[2], Clients[userI].getNick(),
+                       Clients[userI].getFd());
+    return;
+  } else if (channelExists(tokens[1]) != -1) {
+    int channelI = channelExists(tokens[1]);
+    if (channelI == -1) {
+      sendNoChannel(client, tokens[1]);
+    } else {
+      Channels[channelI].privMsg(client, tokens);
+    }
   } else {
-    for (size_t i = 0; i < Clients.size(); i++) {
-      if (ft_strtoupper(Clients[i].getNick()) == ft_strtoupper(tokens[1])) {
-        client.sendMessage(tokens[2], Clients[i].getNick(), Clients[i].getFd());
-        foundClient = true;
-        break;
-      }
-    }
-    if (!foundClient) {
-      std::string errorMsg = ":irc 401 " + client.getNick() + " " + tokens[1] +
-                             " :No such nick/channel\r\n";
-      send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
-    }
+    std::string msg = ":ft_irc 401 " + client.getNick() + " " + tokens[1] +
+                      " :No such nick/channel\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
   }
 }
 
@@ -215,7 +218,7 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
     authResult = client.authenticate(tokens, password, Clients);
   } else {
     if (ft_strtoupper(tokens[0]) == "PRIVMSG") {
-      privMsg(tokens, clientFd, client);
+      privMsg(tokens, client);
     } else if (ft_strtoupper(tokens[0]) == "JOIN") {
       handleJoin(tokens, client);
     } else if (ft_strtoupper(tokens[0]) == "KICK") {
@@ -225,7 +228,10 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
     } else if (ft_strtoupper(tokens[0]) == "TOPIC") {
       handleTopic(tokens, client);
     } else if (ft_strtoupper(tokens[0]) == "MODE") {
-	  handleMode(tokens, client);
+      handleMode(tokens, client);
+    } else if (ft_strtoupper(tokens[0]) == "QUIT") {
+      handleQuit(tokens, client);
+	  disconnectClient(i, clientFd, "");
     }
   }
   // Handle authentication result
