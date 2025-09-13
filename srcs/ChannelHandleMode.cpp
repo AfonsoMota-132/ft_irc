@@ -58,5 +58,39 @@ void Channel::handleModeO(Client &client,
 
 void Channel::handleModeL(Client &client,
                           const std::vector<std::string> &tokens, bool add) {
-
+  if (add) {
+    if (tokens.size() >= 3) {
+      if (tokens[2].empty() || tokens[2].size() > 10) {
+        std::string msg = ":ft_irc 696 " + client.getNick() + " #" + name +
+                          " l :Invalid limit parameters\r\n";
+        send(client.getFd(), msg.c_str(), msg.size(), 0);
+        return;
+      }
+      for (size_t i = 0; i < tokens[2].size(); i++) {
+        if (!std::isdigit(static_cast<unsigned char>(tokens[2][i]))) {
+          std::string msg = ":ft_irc 696 " + client.getNick() + " #" + name +
+                            " l :Invalid limit parameters\r\n";
+          send(client.getFd(), msg.c_str(), msg.size(), 0);
+          return;
+        }
+      }
+      std::stringstream ss(tokens[2]);
+      long long limit;
+      ss >> limit;
+      if (!ss.eof()|| ss.fail() || limit <= 0 || limit >= INT_MAX) {
+        std::string msg = ":ft_irc 696 " + client.getNick() + " #" + name +
+                          " l :Invalid limit parameters\r\n";
+        send(client.getFd(), msg.c_str(), msg.size(), 0);
+        return;
+      } else {
+        lim = static_cast<int>(limit);
+      }
+    } else {
+      std::string msg = "ft_irc 461 " + client.getNick() + " MODE" +
+                        " :Not enough parameters\r\n";
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
+    }
+  } else {
+    lim = 0;
+  }
 };

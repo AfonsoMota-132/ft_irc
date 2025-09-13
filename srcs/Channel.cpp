@@ -14,7 +14,7 @@
 
 Channel::Channel(const std::string &_name, Client &client,
                  const std::string &_password)
-    : name(_name), password(_password), inv(false), top(false), lim(-1) {
+    : name(_name), password(_password), inv(false), top(false), lim(0) {
   sudoUsers.push_back(client);
   sendJoinMessage(client);
 };
@@ -39,14 +39,13 @@ void Channel::join(Client &client, const std::string &pass, bool sudo) {
     std::cout << "Wrong Password" << std::endl;
     sendCantJoin(client, 'k', "475");
     return;
-  }
-  if (inv != -1 && sudoUsers.size() + Users.size() > lim) {
-    if (!isUserInvited(client.getNick())) {
-      sendCantJoin(client, 'i', "473");
-      return;
-    }
-  }
-  if (!sudo) {
+  } else if (inv && !isUserInvited(client.getNick())) {
+    sendCantJoin(client, 'i', "473");
+    return;
+  } else if (lim > 0 && lim < sudoUsers.size() + Users.size()){
+	sendCantJoin(client, 'l', "471");
+	return;
+  } else if (!sudo) {
     Users.push_back(client);
   } else {
     sudoUsers.push_back(client);

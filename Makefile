@@ -15,13 +15,14 @@ CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 RM = rm -f
 
-SRCS = srcs/main.cpp			\
-	   srcs/Client.cpp			\
-	   srcs/Server.cpp			\
-	   srcs/Channel.cpp			\
-	   srcs/ServerHandle.cpp	\
-	   srcs/ServerCheck.cpp		\
-	   srcs/ChannelHelpers.cpp
+SRCS = srcs/main.cpp				\
+	   srcs/Client.cpp				\
+	   srcs/Server.cpp				\
+	   srcs/Channel.cpp				\
+	   srcs/ServerHandle.cpp		\
+	   srcs/ServerCheck.cpp			\
+	   srcs/ChannelHelpers.cpp		\
+	   srcs/ChannelHandleMode.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

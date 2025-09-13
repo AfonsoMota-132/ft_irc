@@ -13,6 +13,11 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+#include <iostream>
+#include <sstream>
+#include <climits>
+#include <string>
+
 #ifndef CLIENT_HPP
 #include "Client.hpp"
 #endif
@@ -31,8 +36,7 @@ public:
   void invite(Client &client, Client &invited);
   void privMsg(Client &client, const std::vector<std::string> &tokens);
   void handleTopic(Client &client, const std::vector<std::string> &tokens);
-  void handleMode(Client &client, const std::vector<std::string> &tokens,
-                  const std::vector<Client> &clients);
+  void handleMode(Client &client, const std::vector<std::string> &tokens);
   void handleQuit(Client &client, const std::vector<std::string> &tokens);
   std::string getName(void) const;
   std::string getPassword(void) const;
@@ -63,6 +67,6 @@ private:
   std::vector<Client> Invites;
   bool inv;
   bool top;
-  int lim;
+  long unsigned int lim;
 };
 #endif
