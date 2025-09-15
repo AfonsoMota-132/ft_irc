@@ -51,7 +51,6 @@ public:
   ~Client(void);
 
   int acceptConnection(int server_fd);
-  int receiveMessage(char *buffer);
   void closeFd(void);
   int getFd(void) const;
   bool getCapLs(void) const;

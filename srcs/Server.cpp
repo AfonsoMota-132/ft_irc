@@ -17,30 +17,35 @@ Server::Server(int _port, std::string _password)
     : port(_port), password(_password) {
   serverFd = socket(AF_INET, SOCK_STREAM, 0);
   if (serverFd < 0) {
-    perror("socket");
+    port = -1;
+    std::cerr << "Error: Failed to create socket" << std::endl;
     return;
   }
 
   // Allow reuse of address to avoid "Address already in use" error
   int opt = 1;
   if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-    perror("setsockopt");
+    port = -1;
+    std::cerr << "Error: Failed to set socket" << std::endl;
     close(serverFd);
     return;
   }
   fcntl(serverFd, F_SETFL, fcntl(serverFd, F_GETFL, 0) | O_NONBLOCK);
-  memset(&serverAddr, 0, sizeof(serverAddr));
+  serverAddr.sin_family = 0;
+  serverAddr.sin_port = 0;
+  serverAddr.sin_addr.s_addr = 0;
+
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_addr.s_addr = INADDR_ANY;
   serverAddr.sin_port = htons(port);
   if (bind(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-    perror("bind");
+    std::cerr << "Error: Failed to bind socket to address" << std::endl;
     close(serverFd);
     this->port = -1;
     return;
   }
   if (listen(serverFd, SOMAXCONN) < 0) {
-    perror("listen");
+    std::cerr << "Error: Failed to listen on socket" << std::endl;
     close(serverFd);
     return;
   }
@@ -55,7 +60,7 @@ void Server::serverListen(void) {
   while (true) {
     pollCount = poll(&pollFds[0], pollFds.size(), -1);
     if (pollCount < 0) {
-      perror("poll");
+      std::cerr << "Error: poll() failed" << std::endl;
       break;
     }
     for (size_t i = 0; i < pollFds.size(); ++i) {
@@ -107,15 +112,12 @@ void Server::disconnectClient(size_t i, int clientFd,
       send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
     }
   }
-  // Small delay to ensure message is sent
-  usleep(100000); // 100ms
   closeClientFd(i, clientFd);
 }
 
 void Server::kickClient(size_t i, int clientFd, const std::string &reason) {
   std::string errorMsg = "ERROR :Closing Link: " + reason + "\r\n";
   send(clientFd, errorMsg.c_str(), errorMsg.size(), 0);
-  usleep(100000); // 100ms
   closeClientFd(i, clientFd);
 };
 
@@ -231,7 +233,7 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
       handleMode(tokens, client);
     } else if (ft_strtoupper(tokens[0]) == "QUIT") {
       handleQuit(tokens, client);
-	  disconnectClient(i, clientFd, "");
+      disconnectClient(i, clientFd, "");
     }
   }
   // Handle authentication result

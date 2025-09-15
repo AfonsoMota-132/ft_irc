@@ -15,15 +15,14 @@
 
 Server *data;
 
-const std::string	ft_strtoupper(const std::string &other)
-{
-	std::string	result = other;
+const std::string ft_strtoupper(const std::string &other) {
+  std::string result = other;
 
-	for (size_t i = 0; i < result.size(); i++) {
-		result[i] = static_cast<char>(std::toupper(result[i]));
-	}
-	std::cout << result << std::endl;
-	return (result);
+  for (size_t i = 0; i < result.size(); i++) {
+    result[i] = static_cast<char>(std::toupper(result[i]));
+  }
+  std::cout << result << std::endl;
+  return (result);
 }
 
 void signalHandler(int signum) {
@@ -33,7 +32,7 @@ void signalHandler(int signum) {
     delete data;
     data = NULL;
   }
-  _exit(signum);
+  std::exit(signum);
 }
 // Implement size limit of 512 including \r\n, following
 // the RFC 1459 protocol
@@ -42,10 +41,10 @@ int main(int ac, char **av) {
     std::cout << "Error\nInvalid Number of Arguments!" << std::endl;
     return (1);
   }
-  // signal(SIGINT, &signalHandler);
+  std::signal(SIGINT, &signalHandler);
   data = new Server(std::atoi(av[1]), av[2]);
   if (data->getPort() == -1) {
-	return (1);
+    return (1);
   }
   std::cout << "Server listening on port " << data->getPort() << std::endl;
   data->serverListen();

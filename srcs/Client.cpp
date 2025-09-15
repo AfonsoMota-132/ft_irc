@@ -24,27 +24,11 @@ Client::~Client(void) {
 int Client::acceptConnection(int server_fd) {
   fd = accept(server_fd, (struct sockaddr *)&addr, &addrLen);
   if (fd < 0) {
-    perror("accept");
+    std::cout << "Error: Couldn't accept new client connection!" << std::endl;
     fd = -1;
     close(server_fd);
     return (1);
   }
-  return (0);
-}
-
-int Client::receiveMessage(char *buffer) {
-  ssize_t bytes_read = read(fd, buffer, sizeof(buffer) - 1);
-  if (bytes_read < 0) {
-    perror("read");
-    close(fd);
-    close(fd);
-    return (1);
-  }
-  if (bytes_read == 0)
-    return (2);
-
-  buffer[bytes_read] = '\0';
-  printf("%s\n", buffer);
   return (0);
 }
 
