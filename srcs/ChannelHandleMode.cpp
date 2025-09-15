@@ -29,23 +29,29 @@ void Channel::handleModeK(Client &client,
 
 void Channel::handleModeO(Client &client,
                           const std::vector<std::string> &tokens, bool add) {
-  if (tokens.size() >= 3) {
+  if (tokens.size() >= 4) {
     if (add) {
-      if (!isUserSudo(tokens[2]) && isUserInChannel(tokens[2])) {
+      if (!isUserSudo(tokens[3]) && isUserInChannel(tokens[3])) {
         sudoUsers.push_back(client);
-      } else if (isUserInChannel(tokens[2])) {
+        for (size_t i = 0; i < Users.size(); i++) {
+          if (ft_strtoupper(tokens[3]) == ft_strtoupper(Users[i].getNick())) {
+			Users.erase(Users.begin() + i);
+			return ;
+          }
+        }
+      } else if (isUserInChannel(tokens[3])) {
         sendNotInChannel(client);
       }
     } else {
-      if (isUserSudo(tokens[2]) && isUserInChannel(tokens[2])) {
+      if (isUserSudo(tokens[3]) && isUserInChannel(tokens[3])) {
         for (size_t i = 0; i < sudoUsers.size(); i++) {
-          if (ft_strtoupper(tokens[2]) ==
+          if (ft_strtoupper(tokens[3]) ==
               ft_strtoupper(sudoUsers[i].getNick())) {
             sudoUsers.erase(sudoUsers.begin() + i);
             return;
           }
         }
-      } else if (isUserInChannel(tokens[2])) {
+      } else if (isUserInChannel(tokens[3])) {
         sendNotInChannel(client);
       }
     }
@@ -77,7 +83,7 @@ void Channel::handleModeL(Client &client,
       std::stringstream ss(tokens[2]);
       long long limit;
       ss >> limit;
-      if (!ss.eof()|| ss.fail() || limit <= 0 || limit >= INT_MAX) {
+      if (!ss.eof() || ss.fail() || limit <= 0 || limit >= INT_MAX) {
         std::string msg = ":ft_irc 696 " + client.getNick() + " #" + name +
                           " l :Invalid limit parameters\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);

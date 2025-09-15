@@ -21,13 +21,10 @@ const std::string ft_strtoupper(const std::string &other) {
   for (size_t i = 0; i < result.size(); i++) {
     result[i] = static_cast<char>(std::toupper(result[i]));
   }
-  std::cout << result << std::endl;
   return (result);
 }
 
 void signalHandler(int signum) {
-  if (signum == SIGPIPE || signum == SIGSEGV)
-    return;
   if (data) {
     delete data;
     data = NULL;
@@ -38,7 +35,7 @@ void signalHandler(int signum) {
 // the RFC 1459 protocol
 int main(int ac, char **av) {
   if (ac != 3) {
-    std::cout << "Error\nInvalid Number of Arguments!" << std::endl;
+    std::cerr << "Error\nInvalid Number of Arguments!" << std::endl;
     return (1);
   }
   std::signal(SIGINT, &signalHandler);
@@ -48,6 +45,5 @@ int main(int ac, char **av) {
   }
   std::cout << "Server listening on port " << data->getPort() << std::endl;
   data->serverListen();
-  (void)av;
   return 0;
 }

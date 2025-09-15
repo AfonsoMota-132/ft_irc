@@ -35,16 +35,18 @@ void Channel::privMsg(Client &client, const std::vector<std::string> &tokens) {
 };
 
 void Channel::join(Client &client, const std::string &pass, bool sudo) {
+  if (isUserInChannel(client.getNick())) {
+    return;
+  }
   if (!password.empty() && password != pass) {
-    std::cout << "Wrong Password" << std::endl;
     sendCantJoin(client, 'k', "475");
     return;
   } else if (inv && !isUserInvited(client.getNick())) {
     sendCantJoin(client, 'i', "473");
     return;
-  } else if (lim > 0 && lim < sudoUsers.size() + Users.size()){
-	sendCantJoin(client, 'l', "471");
-	return;
+  } else if (lim > 0 && lim < sudoUsers.size() + Users.size()) {
+    sendCantJoin(client, 'l', "471");
+    return;
   } else if (!sudo) {
     Users.push_back(client);
   } else {
@@ -108,6 +110,9 @@ void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
 
 void Channel::handleMode(Client &client,
                          const std::vector<std::string> &tokens) {
+  if (tokens.size() < 3) {
+    return;
+  }
   if (!isUserInChannel(client.getNick())) {
     sendNotInChannel(client);
     return;
@@ -115,29 +120,29 @@ void Channel::handleMode(Client &client,
     sendNotSudo(client);
     return;
   } else {
-    if (tokens[1].at(0) != '+' && tokens[1].at(0) != '-') {
+    if (tokens[2].at(0) != '+' && tokens[2].at(0) != '-') {
       std::string msg = ":ft_irc 472 " + client.getNick() + " " +
-                        tokens[1].at(0) + " :is unknown mode char to me\r\n";
+                        tokens[2].at(0) + " :is unknown mode char to me\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
       return;
-    } else if (tokens[1].at(1) != 'i' && tokens[1].at(1) != 't' &&
-               tokens[1].at(1) != 'k' && tokens[1].at(1) != 'o' &&
-               tokens[1].at(1) != 'l') {
+    } else if (tokens[2].at(1) != 'i' && tokens[2].at(1) != 't' &&
+               tokens[2].at(1) != 'k' && tokens[2].at(1) != 'o' &&
+               tokens[2].at(1) != 'l') {
       std::string msg = ":ft_irc 472 " + client.getNick() + " " +
-                        tokens[1].at(1) + " :is unknown mode char to me\r\n";
+                        tokens[2].at(1) + " :is unknown mode char to me\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
       return;
     } else {
-      bool add = (tokens[1].at(0) == '+');
-      if (tokens[1].at(1) == 'i') {
+      bool add = (tokens[2].at(0) == '+');
+      if (tokens[2].at(1) == 'i') {
         inv = add;
-      } else if (tokens[1].at(1) == 't') {
+      } else if (tokens[2].at(1) == 't') {
         top = add;
-      } else if (tokens[1].at(1) == 'k') {
+      } else if (tokens[2].at(1) == 'k') {
         handleModeK(client, tokens, add);
-      } else if (tokens[1].at(1) == 'o') {
+      } else if (tokens[2].at(1) == 'o') {
         handleModeO(client, tokens, add);
-      } else if (tokens[1].at(1) == 'l') {
+      } else if (tokens[2].at(1) == 'l') {
         handleModeL(client, tokens, add);
       }
     }

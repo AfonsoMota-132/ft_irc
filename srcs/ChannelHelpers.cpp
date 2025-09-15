@@ -13,7 +13,6 @@
 #include "../incs/Channel.hpp"
 
 void Channel::sendCantJoin(Client &client, char mode, const std::string &code) {
-  std::cout << "Wrong Password" << std::endl;
   std::string msg = ":ft_irc " + code + " " + client.getNick() + " #" + name +
                     " :Cannot join channel (+" + mode + ")\r\n";
   send(client.getFd(), msg.c_str(), msg.size(), 0);

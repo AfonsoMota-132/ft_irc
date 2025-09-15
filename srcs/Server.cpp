@@ -31,9 +31,6 @@ Server::Server(int _port, std::string _password)
     return;
   }
   fcntl(serverFd, F_SETFL, fcntl(serverFd, F_GETFL, 0) | O_NONBLOCK);
-  serverAddr.sin_family = 0;
-  serverAddr.sin_port = 0;
-  serverAddr.sin_addr.s_addr = 0;
 
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_addr.s_addr = INADDR_ANY;
@@ -45,6 +42,7 @@ Server::Server(int _port, std::string _password)
     return;
   }
   if (listen(serverFd, SOMAXCONN) < 0) {
+    this->port = -1;
     std::cerr << "Error: Failed to listen on socket" << std::endl;
     close(serverFd);
     return;
@@ -124,35 +122,34 @@ void Server::kickClient(size_t i, int clientFd, const std::string &reason) {
 void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
   buffer[bytes] = '\0';
   std::string tmp = buffer;
+  Client &client = Clients[i - 1];
   if (bytes >= 512) {
     std::string msg =
         ":ft_irc 903 " + Clients[i - 1].getNick() + " :Message too long";
     send(clientFd, msg.c_str(), msg.size(), 0);
   } else {
-    while (tmp.find_first_of("\r\n") == std::string::npos) {
-      int tmpBytes = recv(clientFd, buffer, sizeof(buffer) - bytes - 1, 0);
-      if (tmpBytes > 0) {
-        buffer[tmpBytes] = '\0';
-        tmp += buffer;
-        bytes += tmpBytes;
-      }
-      if (bytes >= 512)
-        break;
+    if (!client.getBuffer().empty()) {
+      client.setBuffer(client.getBuffer() + tmp);
+      tmp = client.getBuffer();
     }
-    if (bytes >= 512)
+    if (bytes >= 512 || client.getBuffer().size() >= 512) {
       send(clientFd, "Error: Message is too big!\n", 27, 0);
-    else {
+    } else if (tmp.find_first_of("\r\n") != std::string::npos) {
       size_t start = 0;
       size_t end = tmp.find("\r\n");
 
       while (end != std::string::npos) {
         std::string message = tmp.substr(start, end - start);
         if (!message.empty()) {
+		  std::cout << message << std::endl;
           parseMsg(message, i, clientFd);
         }
         start = end + 2;
         end = tmp.find("\r\n", start);
       }
+	  client.setBuffer("");
+    } else if (client.getBuffer().empty()) {
+      client.setBuffer(buffer);
     }
   }
 };
@@ -210,9 +207,6 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
   }
   if (!current.empty()) {
     tokens.push_back(current);
-  }
-  for (size_t k = 0; k < tokens.size(); ++k) {
-    std::cout << "Token[" << k << "]: " << tokens[k] << std::endl;
   }
   Client &client = Clients[i - 1];
   int authResult = 0;

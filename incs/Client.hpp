@@ -33,6 +33,7 @@ private:
   int fd;
   std::string nick;
   std::string user;
+  std::string buffer;
   struct sockaddr_in addr;
   socklen_t addrLen;
   bool capLs;
@@ -51,6 +52,8 @@ public:
   ~Client(void);
 
   int acceptConnection(int server_fd);
+  void setBuffer(const std::string &msg);
+  std::string getBuffer(void) const;
   void closeFd(void);
   int getFd(void) const;
   bool getCapLs(void) const;

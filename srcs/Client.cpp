@@ -15,16 +15,15 @@
 Client::Client(void)
     : fd(-1), nick(""), user(""), addrLen(sizeof(addr)), capLs(false),
       pass(false), auth(false) {
-  std::cout << "Client's Default Constructor called" << std::endl;
 };
+
 Client::~Client(void) {
-  std::cout << "Client's Default destructor called" << std::endl;
 };
 
 int Client::acceptConnection(int server_fd) {
   fd = accept(server_fd, (struct sockaddr *)&addr, &addrLen);
   if (fd < 0) {
-    std::cout << "Error: Couldn't accept new client connection!" << std::endl;
+    std::cerr << "Error: Couldn't accept new client connection!" << std::endl;
     fd = -1;
     close(server_fd);
     return (1);
@@ -37,8 +36,13 @@ void Client::closeFd(void) { close(fd); }
 int Client::getFd(void) const { return (this->fd); }
 bool Client::getCapLs(void) const { return (this->capLs); }
 bool Client::getAuth(void) const { return (this->auth); }
+std::string Client::getBuffer(void) const { return (this->buffer); }
 const std::string Client::getNick(void) const { return (this->nick); }
 const std::string Client::getUser(void) const { return (this->user); }
+
+void Client::setBuffer(const std::string &msg) {
+	buffer = msg;
+}
 
 bool Client::authCapLs(std::vector<std::string> &tokens) {
   if (tokens.size() == 3 && ft_strtoupper(tokens[0]) == "CAP" &&
@@ -71,7 +75,6 @@ bool Client::authPass(std::vector<std::string> &tokens,
 
   if (tokens[1] == password) {
     pass = true;
-    std::cout << "Password accepted for FD " << fd << std::endl;
     return true;
   } else {
     std::string msg = "ERROR :Bad password\r\n";
@@ -120,7 +123,6 @@ bool Client::authNick(std::vector<std::string> &tokens,
     }
   }
   nick = tokens[1];
-  std::cout << "NICK set to: " << nick << " for FD " << fd << std::endl;
   // Check if we can complete authentication
   if (!nick.empty() && !user.empty()) {
     auth = true;
@@ -149,7 +151,6 @@ bool Client::authUser(std::vector<std::string> &tokens) {
   }
 
   user = tokens[1];
-  std::cout << "USER set to: " << user << " for FD " << fd << std::endl;
   // Check if we can complete authentication
   if (!nick.empty() && !user.empty()) {
     auth = true;
@@ -160,9 +161,6 @@ bool Client::authUser(std::vector<std::string> &tokens) {
 }
 
 void Client::sendWelcomeMessages() {
-  std::cout << "Client authenticated successfully! Nick: " << nick
-            << ", User: " << user << ", FD: " << fd << std::endl;
-
   // RPL_WELCOME (001)
   std::string welcome = ":server 001 " + nick + " :Welcome to the IRC Server " +
                         nick + "!" + user + "@host\r\n";
@@ -264,6 +262,5 @@ void Client::sendMessage(const std::string &msg, const std::string &user,
                          int fd) const {
   std::string message = ":" + nick + "!" + user + "@localhost PRIVMSG " + user +
                         " :" + msg + "\r\n";
-  std::cout << "sent : \"" << message << "\" to fd: " << fd << std::endl;
   send(fd, message.c_str(), message.size(), 0);
 }

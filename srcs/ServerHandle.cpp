@@ -93,7 +93,6 @@ void Server::handleJoin(const std::vector<std::string> &tokens,
     if (tokens.size() >= 3)
       password = tokens[2];
     Channel newChannel(tokens[1].substr(1), client, password);
-    std::cout << "Creating new channel!" << std::endl;
     Channels.push_back(newChannel);
   }
   (void)client;
@@ -110,11 +109,11 @@ void Server::handleMode(const std::vector<std::string> &tokens,
       sendNoChannel(client, tokens[1]);
       return;
     } else {
-      if (tokens[1].size() > 2) {
+      if (tokens.size() >= 3 && tokens[2].size() > 2) {
         std::string msg = ":ft_irc 904 " + client.getNick() +
                           " MODE :Too many mode changes in one call!\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
-      } else if (tokens[1].size() < 2) {
+      } else if (tokens.size() >= 3 && tokens[2].size() < 2) {
         std::string msg = ":ft_irc 905 " + client.getNick() +
                           " MODE :Mode Changes need to be <sign><mode>!\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
