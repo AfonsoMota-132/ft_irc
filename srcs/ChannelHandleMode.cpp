@@ -47,6 +47,7 @@ void Channel::handleModeO(Client &client,
         for (size_t i = 0; i < sudoUsers.size(); i++) {
           if (ft_strtoupper(tokens[3]) ==
               ft_strtoupper(sudoUsers[i].getNick())) {
+            Users.push_back(sudoUsers[i]);
             sudoUsers.erase(sudoUsers.begin() + i);
           }
         }
