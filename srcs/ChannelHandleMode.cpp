@@ -32,15 +32,15 @@ void Channel::handleModeO(Client &client,
   if (tokens.size() >= 4) {
     if (add) {
       if (!isUserSudo(tokens[3]) && isUserInChannel(tokens[3])) {
-        sudoUsers.push_back(client);
         for (size_t i = 0; i < Users.size(); i++) {
           if (ft_strtoupper(tokens[3]) == ft_strtoupper(Users[i].getNick())) {
-			Users.erase(Users.begin() + i);
-			return ;
+            sudoUsers.push_back(Users[i]);
+            Users.erase(Users.begin() + i);
           }
         }
       } else if (isUserInChannel(tokens[3])) {
         sendNotInChannel(client);
+        return;
       }
     } else {
       if (isUserSudo(tokens[3]) && isUserInChannel(tokens[3])) {
@@ -48,17 +48,26 @@ void Channel::handleModeO(Client &client,
           if (ft_strtoupper(tokens[3]) ==
               ft_strtoupper(sudoUsers[i].getNick())) {
             sudoUsers.erase(sudoUsers.begin() + i);
-            return;
           }
         }
       } else if (isUserInChannel(tokens[3])) {
         sendNotInChannel(client);
+        return;
       }
     }
   } else {
     std::string msg = "ft_irc 461 " + client.getNick() + " MODE" +
                       " :Not enough parameters\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  }
+  for (size_t i = 0; i < sudoUsers.size(); i++) {
+    sendClientList(sudoUsers[i]);
+	sendEndNameList(sudoUsers[i]);
+  }
+  for (size_t i = 0; i < Users.size(); i++) {
+    sendClientList(Users[i]);
+	sendEndNameList(Users[i]);
   }
 };
 
