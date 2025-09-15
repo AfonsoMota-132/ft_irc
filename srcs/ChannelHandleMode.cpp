@@ -29,6 +29,7 @@ void Channel::handleModeK(Client &client,
 
 void Channel::handleModeO(Client &client,
                           const std::vector<std::string> &tokens, bool add) {
+  bool sendMessage = false;
   if (tokens.size() >= 4) {
     if (add) {
       if (!isUserSudo(tokens[3]) && isUserInChannel(tokens[3])) {
@@ -36,10 +37,14 @@ void Channel::handleModeO(Client &client,
           if (ft_strtoupper(tokens[3]) == ft_strtoupper(Users[i].getNick())) {
             sudoUsers.push_back(Users[i]);
             Users.erase(Users.begin() + i);
+            sendMessage = true;
+            break;
           }
         }
-      } else if (isUserInChannel(tokens[3])) {
-        sendNotInChannel(client);
+      } else if (!isUserInChannel(tokens[3])) {
+        std::string msg = ":ft_irc 441 " + client.getNick() + " " + tokens[3] +
+                          " #" + name + " :They aren't on that channel";
+        send(client.getFd(), msg.c_str(), msg.size(), 0);
         return;
       }
     } else {
@@ -49,10 +54,14 @@ void Channel::handleModeO(Client &client,
               ft_strtoupper(sudoUsers[i].getNick())) {
             Users.push_back(sudoUsers[i]);
             sudoUsers.erase(sudoUsers.begin() + i);
+            sendMessage = true;
+            break;
           }
         }
-      } else if (isUserInChannel(tokens[3])) {
-        sendNotInChannel(client);
+      } else if (!isUserInChannel(tokens[3])) {
+        std::string msg = ":ft_irc 441 " + client.getNick() + " " + tokens[3] +
+                          " #" + name + " :They aren't on that channel";
+        send(client.getFd(), msg.c_str(), msg.size(), 0);
         return;
       }
     }
@@ -62,13 +71,15 @@ void Channel::handleModeO(Client &client,
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
   }
-  for (size_t i = 0; i < sudoUsers.size(); i++) {
-    sendClientList(sudoUsers[i]);
-	sendEndNameList(sudoUsers[i]);
-  }
-  for (size_t i = 0; i < Users.size(); i++) {
-    sendClientList(Users[i]);
-	sendEndNameList(Users[i]);
+  if (sendMessage) {
+    for (size_t i = 0; i < sudoUsers.size(); i++) {
+      sendClientList(sudoUsers[i]);
+      sendEndNameList(sudoUsers[i]);
+    }
+    for (size_t i = 0; i < Users.size(); i++) {
+      sendClientList(Users[i]);
+      sendEndNameList(Users[i]);
+    }
   }
 };
 
