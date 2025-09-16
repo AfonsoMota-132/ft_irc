@@ -51,6 +51,7 @@ public:
   void handleTopic(const std::vector<std::string> &tokens, Client &client);
   void handleMode(const std::vector<std::string> &tokens, Client &client);
   void handleQuit(const std::vector<std::string> &tokens, Client &client);
+  void handlePart(const std::vector<std::string> &tokens, Client &client);
 
   int channelExists(const std::string &channel);
   int userExists(const std::string &user);

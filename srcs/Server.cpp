@@ -141,13 +141,13 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
       while (end != std::string::npos) {
         std::string message = tmp.substr(start, end - start);
         if (!message.empty()) {
-		  std::cout << message << std::endl;
+          std::cout << message << std::endl;
           parseMsg(message, i, clientFd);
         }
         start = end + 2;
         end = tmp.find("\r\n", start);
       }
-	  client.setBuffer("");
+      client.setBuffer("");
     } else if (client.getBuffer().empty()) {
       client.setBuffer(buffer);
     }
@@ -228,6 +228,8 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
     } else if (ft_strtoupper(tokens[0]) == "QUIT") {
       handleQuit(tokens, client);
       disconnectClient(i, clientFd, "");
+    } else if (ft_strtoupper(tokens[0]) == "PART") {
+	  handlePart(tokens, client);
     }
   }
   // Handle authentication result

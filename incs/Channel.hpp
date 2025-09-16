@@ -38,6 +38,7 @@ public:
   void handleTopic(Client &client, const std::vector<std::string> &tokens);
   void handleMode(Client &client, const std::vector<std::string> &tokens);
   void handleQuit(Client &client, const std::vector<std::string> &tokens);
+  size_t ClientCount(void) const;
   std::string getName(void) const;
   std::string getPassword(void) const;
 

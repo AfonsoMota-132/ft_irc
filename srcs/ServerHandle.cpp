@@ -118,7 +118,7 @@ void Server::handleMode(const std::vector<std::string> &tokens,
                           " MODE :Mode Changes need to be <sign><mode>!\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
       } else {
-		Channels[channelI].handleMode(client, tokens);
+        Channels[channelI].handleMode(client, tokens);
       }
     }
   }
@@ -128,5 +128,39 @@ void Server::handleQuit(const std::vector<std::string> &tokens,
                         Client &client) {
   for (size_t i = 0; i < Channels.size(); i++) {
     Channels[i].handleQuit(client, tokens);
+  }
+  for (size_t i = 0; i < Channels.size(); i++) {
+    if (Channels[i].ClientCount() == 0) {
+      Channels.erase(Channels.begin() + i);
+      i = 0;
+    }
+  }
+}
+
+void Server::handlePart(const std::vector<std::string> &tokens,
+                        Client &client) {
+  if (tokens.size() >= 2) {
+    int i = channelExists(tokens[1]);
+    if (i != -1) {
+      std::string msg = ":" + client.getNick() + "!" + client.getUser() +
+                            "@localhost" + " PART #" + Channels[i].getName();
+      if (tokens.size() >= 3 && tokens[2].empty()) {
+        msg += " :" + tokens[2];
+      } else {
+        msg += " : Bye Bye";
+      }
+      msg += "\r\n";
+	  send(client.getFd(), msg.c_str(), msg.size(), 0);
+      std::vector<std::string> tmp(tokens);
+      tmp.erase(tmp.begin() + 1);
+      Channels[i].handleQuit(client, tmp);
+      if (Channels[i].ClientCount() == 0) {
+        Channels.erase(Channels.begin() + i);
+      }
+    } else {
+      sendNoChannel(client, tokens[1]);
+    }
+  } else {
+    sendNoParams(client, "PART");
   }
 }

@@ -222,6 +222,12 @@ void Channel::handleQuit(Client &client,
         }
       }
     }
+    for (size_t i = 0; i < Users.size(); i++) {
+      send(Users[i].getFd(), msg.c_str(), msg.size(), 0);
+    }
+    for (size_t i = 0; i < sudoUsers.size(); i++) {
+      send(sudoUsers[i].getFd(), msg.c_str(), msg.size(), 0);
+    }
   }
   int i = isUserInvited(client.getNick());
   if (i) {
@@ -233,6 +239,10 @@ void Channel::handleQuit(Client &client,
       }
     }
   }
+}
+
+size_t Channel::ClientCount(void) const {
+  return sudoUsers.size() + Users.size();
 }
 
 Channel::~Channel(void) {};
