@@ -26,10 +26,14 @@ void Channel::privMsg(Client &client, const std::vector<std::string> &tokens) {
     std::string msg = ":" + client.getNick() + "!" + client.getUser() +
                       "@localhost PRIVMSG #" + name + " :" + tokens[2] + "\r\n";
     for (size_t i = 0; i < sudoUsers.size(); i++) {
-      send(sudoUsers[i].getFd(), msg.c_str(), msg.size(), 0);
+      if (client.getNick() != sudoUsers[i].getNick()) {
+        send(sudoUsers[i].getFd(), msg.c_str(), msg.size(), 0);
+      }
     }
     for (size_t i = 0; i < Users.size(); i++) {
-      send(Users[i].getFd(), msg.c_str(), msg.size(), 0);
+      if (client.getNick() != Users[i].getNick()) {
+        send(Users[i].getFd(), msg.c_str(), msg.size(), 0);
+      }
     }
   }
 };
@@ -44,7 +48,7 @@ void Channel::join(Client &client, const std::string &pass, bool sudo) {
   } else if (inv && !isUserInvited(client.getNick())) {
     sendCantJoin(client, 'i', "473");
     return;
-  } else if (lim > 0 && lim < sudoUsers.size() + Users.size()) {
+  } else if (lim > 0 && lim <= sudoUsers.size() + Users.size()) {
     sendCantJoin(client, 'l', "471");
     return;
   } else if (!sudo) {
@@ -201,19 +205,33 @@ void Channel::handleQuit(Client &client,
     } else {
       msg += "Bye Bye!\r\n";
     }
-    int i = isUserSudo(client.getNick());
-    if (i == -1) {
-      i = isUserInChannel(client.getNick());
-      Users.erase(Users.begin() + i);
+    if (isUserSudo(client.getNick())) {
+      for (size_t i = 0; i < sudoUsers.size(); i++) {
+        if (ft_strtoupper(client.getNick()) ==
+            ft_strtoupper(sudoUsers[i].getNick())) {
+          sudoUsers.erase(sudoUsers.begin() + i);
+          break;
+        }
+      }
     } else {
-      sudoUsers.erase(sudoUsers.begin() + i);
-    }
-    for (size_t i = 0; i < sudoUsers.size(); i++) {
+      for (size_t i = 0; i < Users.size(); i++) {
+        if (ft_strtoupper(client.getNick()) ==
+            ft_strtoupper(Users[i].getNick())) {
+          Users.erase(Users.begin() + i);
+          break;
+        }
+      }
     }
   }
   int i = isUserInvited(client.getNick());
-  if (i != -1) {
-    Invites.erase(Invites.begin() + i);
+  if (i) {
+    for (size_t i = 0; i < Invites.size(); i++) {
+      if (ft_strtoupper(client.getNick()) ==
+          ft_strtoupper(Invites[i].getNick())) {
+        Invites.erase(Users.begin() + i);
+        break;
+      }
+    }
   }
 }
 
