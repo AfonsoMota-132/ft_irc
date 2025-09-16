@@ -114,3 +114,19 @@ void Channel::sendTopic(Client &client) {
 };
 
 std::string Channel::getName(void) const { return (name); };
+
+void Channel::sendModeChange(const std::string &mode, const std::string &parameter,
+                             Client &client) {
+  std::string msg = ":" + client.getNick() + "!" + client.getUser() +
+                    "@localhost MODE #" + name + " " + mode;
+  if (!parameter.empty()) {
+    msg += " " + parameter;
+  }
+  msg += "\r\n";
+  for (size_t i = 0; i < sudoUsers.size(); i++) {
+	send(sudoUsers[i].getFd(), msg.c_str(), msg.size(), 0);
+  }
+  for (size_t i = 0; i < Users.size(); i++) {
+	send(Users[i].getFd(), msg.c_str(), msg.size(), 0);
+  }
+};

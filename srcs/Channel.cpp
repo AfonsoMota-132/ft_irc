@@ -140,8 +140,18 @@ void Channel::handleMode(Client &client,
       bool add = (tokens[2].at(0) == '+');
       if (tokens[2].at(1) == 'i') {
         inv = add;
+        if (add) {
+          sendModeChange("+i", "", client);
+        } else {
+          sendModeChange("-i", "", client);
+        }
       } else if (tokens[2].at(1) == 't') {
         top = add;
+        if (add) {
+          sendModeChange("+t", "", client);
+        } else {
+          sendModeChange("-t", "", client);
+        }
       } else if (tokens[2].at(1) == 'k') {
         handleModeK(client, tokens, add);
       } else if (tokens[2].at(1) == 'o') {
@@ -195,8 +205,8 @@ void Channel::invite(Client &client, Client &invited) {
                          invited.getNick() + " : #" + name + "\r\n";
       std::string msg = ":ft_irc 341 " + client.getNick() + " " +
                         invited.getNick() + " :#" + name + "\r\n";
-	  send(client.getFd(), msg.c_str(), msg.size(), 0);
-	  send(invited.getFd(), msgI.c_str(), msgI.size(), 0);
+      send(client.getFd(), msg.c_str(), msg.size(), 0);
+      send(invited.getFd(), msgI.c_str(), msgI.size(), 0);
     }
   }
 }

@@ -17,13 +17,16 @@ void Channel::handleModeK(Client &client,
   if (add) {
     if (tokens.size() >= 3) {
       password = tokens[3];
+      sendModeChange("+k", tokens[3], client);
     } else {
       std::string msg = "ft_irc 461 " + client.getNick() + " MODE" +
                         " :Not enough parameters\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
+      return;
     };
   } else {
     password = "";
+    sendModeChange("-k", "", client);
   }
 };
 
@@ -38,6 +41,7 @@ void Channel::handleModeO(Client &client,
             sudoUsers.push_back(Users[i]);
             Users.erase(Users.begin() + i);
             sendMessage = true;
+            sendModeChange("+o", tokens[3], client);
             break;
           }
         }
@@ -55,6 +59,7 @@ void Channel::handleModeO(Client &client,
             Users.push_back(sudoUsers[i]);
             sudoUsers.erase(sudoUsers.begin() + i);
             sendMessage = true;
+            sendModeChange("-o", tokens[3], client);
             break;
           }
         }
@@ -111,6 +116,7 @@ void Channel::handleModeL(Client &client,
         return;
       } else {
         lim = static_cast<int>(limit);
+        sendModeChange("+l", tokens[3], client);
       }
     } else {
       std::string msg = "ft_irc 461 " + client.getNick() + " MODE" +
@@ -119,5 +125,6 @@ void Channel::handleModeL(Client &client,
     }
   } else {
     lim = 0;
+    sendModeChange("-l", "", client);
   }
 };

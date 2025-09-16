@@ -13,9 +13,9 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+#include <climits>
 #include <iostream>
 #include <sstream>
-#include <climits>
 #include <string>
 
 #ifndef CLIENT_HPP
@@ -53,6 +53,8 @@ private:
   void sendTopic(Client &client);
   void sendClientList(Client &client);
   void sendEndNameList(Client &client);
+  void sendModeChange(const std::string &mode, const std::string &param,
+                      Client &client);
 
   void handleModeK(Client &client, const std::vector<std::string> &tokens,
                    bool add);
