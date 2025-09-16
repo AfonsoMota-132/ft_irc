@@ -15,11 +15,11 @@
 void Channel::handleModeK(Client &client,
                           const std::vector<std::string> &tokens, bool add) {
   if (add) {
-    if (tokens.size() >= 3) {
+    if (tokens.size() >= 4) {
       password = tokens[3];
       sendModeChange("+k", tokens[3], client);
     } else {
-      std::string msg = "ft_irc 461 " + client.getNick() + " MODE" +
+      std::string msg = ":ft_irc 461 " + client.getNick() + " MODE" +
                         " :Not enough parameters\r\n";
       send(client.getFd(), msg.c_str(), msg.size(), 0);
       return;
@@ -47,7 +47,7 @@ void Channel::handleModeO(Client &client,
         }
       } else if (!isUserInChannel(tokens[3])) {
         std::string msg = ":ft_irc 441 " + client.getNick() + " " + tokens[3] +
-                          " #" + name + " :They aren't on that channel";
+                          " #" + name + " :They aren't on that channel\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
         return;
       }
@@ -65,7 +65,7 @@ void Channel::handleModeO(Client &client,
         }
       } else if (!isUserInChannel(tokens[3])) {
         std::string msg = ":ft_irc 441 " + client.getNick() + " " + tokens[3] +
-                          " #" + name + " :They aren't on that channel";
+                          " #" + name + " :They aren't on that channel\r\n";
         send(client.getFd(), msg.c_str(), msg.size(), 0);
         return;
       }
