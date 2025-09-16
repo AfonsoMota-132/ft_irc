@@ -191,6 +191,12 @@ void Channel::invite(Client &client, Client &invited) {
       return;
     } else {
       Invites.push_back(invited);
+      std::string msgI = ":" + client.getNick() + " INVITE " +
+                         invited.getNick() + " : #" + name + "\r\n";
+      std::string msg = ":ft_irc 341 " + client.getNick() + " " +
+                        invited.getNick() + " :#" + name + "\r\n";
+	  send(client.getFd(), msg.c_str(), msg.size(), 0);
+	  send(invited.getFd(), msgI.c_str(), msgI.size(), 0);
     }
   }
 }
