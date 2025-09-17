@@ -108,6 +108,12 @@ void Channel::kick(Client &client, const std::vector<std::string> &tokens) {
       } else {
         Users.erase(Users.begin() + userExists);
       }
+      for (size_t i = 0; i < Invites.size(); i++) {
+        if (ft_strtoupper(tokens[2]) == ft_strtoupper(Invites[i].getNick())) {
+          Invites.erase(Invites.begin() + i);
+          break;
+        }
+      }
     }
   }
 }
