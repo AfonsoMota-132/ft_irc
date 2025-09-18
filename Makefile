@@ -14,7 +14,7 @@ NAME = irc
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 RM = rm -f
-
+VAL = valgrind  --leak-check=full --show-leak-kinds=all --track-origins=yes
 SRCS = srcs/main.cpp				\
 	   srcs/Client.cpp				\
 	   srcs/Server.cpp				\
@@ -37,6 +37,9 @@ clean:
 fclean: clean
 	$(RM) $(NAME)
 
+valgrind: all
+	$(VAL) ./$(NAME) 6667 abc 
+
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re valgrind
