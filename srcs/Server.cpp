@@ -86,7 +86,6 @@ void Server::serverListen(void) {
 int Server::getPort(void) const { return (this->port); };
 
 void Server::closeClientFd(size_t &i, int &clientFd) {
-  std::cerr << "Client disconnected: FD = " << clientFd << std::endl;
   close(clientFd);
   if (i < pollFds.size())
     pollFds.erase(pollFds.begin() + i);
@@ -141,7 +140,6 @@ void Server::handleClientMsg(size_t &i, int &clientFd, int &bytes) {
       while (end != std::string::npos) {
         std::string message = tmp.substr(start, end - start);
         if (!message.empty()) {
-          std::cout << message << std::endl;
           parseMsg(message, i, clientFd);
         }
         start = end + 2;
@@ -229,16 +227,16 @@ void Server::parseMsg(const std::string &other, size_t i, int clientFd) {
       handleQuit(tokens, client);
       disconnectClient(i, clientFd, "");
     } else if (ft_strtoupper(tokens[0]) == "PART") {
-	  handlePart(tokens, client);
+      handlePart(tokens, client);
+    } else {
+      std::string msg = ":ft_irc 421 " + client.getNick() + " " + tokens[0] +
+                        " :Unknown command\r\n";
+	  send(client.getFd(), msg.c_str(), msg.size(), 0);
     }
   }
-  // Handle authentication result
   if (authResult == 1) {
-    // Authentication failed, disconnect client
     kickClient(i, clientFd, "Authentication failed");
   }
-  // authResult == 0 means continue processing (success or waiting for more
-  // auth steps)
 };
 
 void Server::newClient(void) {
